@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use crate::SV;
-use crate::convert::{FromSV, TryFromSV};
+use crate::convert::{FromAV, FromSV, IntoAV, IntoSV, TryFromAV, TryFromSV};
 use crate::handle::Owned;
 use crate::raw;
 use crate::raw::SSize_t;
+use crate::SV;
 
 /// Perl array object.
 pub struct AV(Owned<raw::AV>);
@@ -149,6 +149,26 @@ impl TryFromSV for AV {
             pthx,
             pthx.ouroboros_sv_rv(raw) as *mut _,
         ))
+    }
+}
+
+impl IntoAV for AV {
+    #[inline]
+    fn into_av(self, pthx: raw::Interpreter) -> AV {
+        assert!(self.pthx() == pthx);
+        self
+    }
+}
+
+impl<T> IntoAV for T
+where
+    T: IntoSV,
+{
+    #[inline]
+    fn into_av(self, pthx: raw::Interpreter) -> AV {
+        let av = unsafe { AV::from_raw_owned(pthx, pthx.newAV()) };
+        av.push(self.into_sv(pthx));
+        av
     }
 }
 
