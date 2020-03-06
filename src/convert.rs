@@ -6,18 +6,6 @@ use crate::raw;
 use crate::{AV, SV};
 use std::fmt::Display;
 
-/// Conversion from AV.
-pub trait FromAV {
-    /// Perform the conversion.
-    unsafe fn from_av(perl: raw::Interpreter, raw: *mut raw::AV) -> Self;
-}
-
-/// Construct new `AV` from `self`.
-pub trait IntoAV {
-    /// Perform the conversion.
-    fn into_av(self, perl: raw::Interpreter) -> AV;
-}
-
 /// Fast unsafe conversion from raw SV pointer.
 pub trait FromSV {
     /// Perform the conversion.
@@ -39,24 +27,6 @@ where
             Some(inner) => inner.into_sv(perl),
             None => unsafe { SV::from_raw_owned(perl, perl.ouroboros_sv_undef()) },
         }
-    }
-}
-
-/// Attempt unsafe conversion from a raw AV pointer.
-pub trait TryFromAV: Sized {
-    /// The type returned in the event of a conversion error.
-    type Error: Display;
-    /// Perform the conversion.
-    unsafe fn try_from_av(perl: raw::Interpreter, raw: *mut raw::AV) -> Result<Self, Self::Error>;
-}
-
-impl<T> TryFromAV for T
-where
-    T: FromAV,
-{
-    type Error = &'static str;
-    unsafe fn try_from_av(perl: raw::Interpreter, raw: *mut raw::AV) -> Result<T, Self::Error> {
-        Ok(T::from_av(perl, raw))
     }
 }
 

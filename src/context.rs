@@ -1,6 +1,6 @@
 //! Context for XS subroutine calls.
 use crate::{AV, SV};
-use crate::convert::{FromAV, IntoAV, FromSV, IntoSV, TryFromSV};
+use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::raw;
 use std;
 use std::ffi::CStr;

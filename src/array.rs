@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::convert::{FromAV, FromSV, IntoAV, IntoSV, TryFromAV, TryFromSV};
+use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::handle::Owned;
 use crate::raw;
 use crate::raw::SSize_t;
@@ -156,14 +156,6 @@ impl TryFromSV for AV {
             pthx,
             pthx.ouroboros_sv_rv(raw) as *mut _,
         ))
-    }
-}
-
-impl IntoAV for AV {
-    #[inline]
-    fn into_av(self, pthx: raw::Interpreter) -> AV {
-        assert!(self.pthx() == pthx);
-        self
     }
 }
 
