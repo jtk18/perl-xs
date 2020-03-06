@@ -1,5 +1,5 @@
 //! Context for XS subroutine calls.
-use crate::{AV, SV};
+use crate::{AV, HV, SV};
 use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::raw;
 use std;
@@ -169,11 +169,19 @@ impl Context {
         val.into_sv(self.perl)
     }
 
-    /// Allocate new SV of type appropriate to store `T`
+    /// Allocate new AV
     #[inline]
     pub fn new_av(&mut self) -> AV
     {
         unsafe{ AV::from_raw_owned(self.perl, self.perl.newAV()) }
+    }
+
+
+    /// Allocate new HV
+    #[inline]
+    pub fn new_hv(&mut self) -> HV
+    {
+        unsafe{ HV::from_raw_owned(self.perl, self.perl.newHV()) }
     }
 
     /// Create a new SV to store an arbitrary Rust value.

@@ -3,6 +3,10 @@ use perl_xs::{ SV, HV, IV };
 xs! {
     package XSTest::Hash;
 
+    sub test_new(ctx) {
+        ctx.new_hv()
+    }
+
     sub test_fetch(ctx, hv: HV, key: SV) {
         hv.fetch::<SV>(&key.to_string().unwrap())
     }

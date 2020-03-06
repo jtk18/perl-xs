@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 use std::mem;
 use std::slice::from_raw_parts;
 
-use crate::SV;
-use crate::convert::{FromSV, TryFromSV};
+use crate::{AV, SV};
+use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::handle::Owned;
 use crate::raw;
 
@@ -71,6 +71,13 @@ impl HV {
         getptr fn fetch_lvalue(key: &str) = hv_fetch(key.as_ptr() as *const _, -(key.len() as raw::I32), 1)
     }
 
+    method! {
+        /// Evaluates the hash in scalar context and returns the result as an SV.
+        ///
+        /// See [`hv_scalar`](http://perldoc.perl.org/perlapi.html#hv_scalar).
+        simple fn scalar() -> *mut raw::SV = hv_scalar()
+    }
+
     /// Stores an SV in a hash.
     ///
     /// See [`hv_store`](http://perldoc.perl.org/perlapi.html#hv_store).
@@ -121,6 +128,12 @@ impl HV {
     #[inline]
     pub fn keys(&self) -> Keys {
         Keys::new(self)
+    }
+}
+
+impl IntoSV for HV {
+    fn into_sv(self, perl: raw::Interpreter) -> SV {
+        unsafe{ SV::from_raw_owned(perl, self.scalar()) }
     }
 }
 
