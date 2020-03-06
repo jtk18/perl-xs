@@ -138,6 +138,13 @@ impl AV {
     }
 }
 
+impl IntoSV for AV {
+    fn into_sv(self, perl: raw::Interpreter) -> SV {
+        let s = self.top_index() + 1;
+        s.into_sv(perl)
+    }
+}
+
 impl TryFromSV for AV {
     type Error = &'static str;
     unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<AV, Self::Error> {
@@ -157,18 +164,6 @@ impl IntoAV for AV {
     fn into_av(self, pthx: raw::Interpreter) -> AV {
         assert!(self.pthx() == pthx);
         self
-    }
-}
-
-impl<T> IntoAV for T
-where
-    T: IntoSV,
-{
-    #[inline]
-    fn into_av(self, pthx: raw::Interpreter) -> AV {
-        let av = unsafe { AV::from_raw_owned(pthx, pthx.newAV()) };
-        av.push(self.into_sv(pthx));
-        av
     }
 }
 

@@ -3,6 +3,11 @@ use perl_xs::{ SV, AV, IV };
 xs! {
     package XSTest::Array;
 
+    sub test_new(ctx) {
+        let av: AV = ctx.new_av();
+        av
+    }
+
     sub test_clear(ctx, rv: SV) {
         rv.deref_av().map(|av| av.clear());
     }
