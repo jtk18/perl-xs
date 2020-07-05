@@ -18,6 +18,12 @@ pub trait IntoSV {
     fn into_sv(self, perl: raw::Interpreter) -> SV;
 }
 
+/// Construct new `AV` from `self`.
+pub trait IntoAV {
+    /// Perform the conversion.
+    fn into_av(self, perl: raw::Interpreter) -> AV;
+}
+
 impl<T> IntoSV for Option<T>
 where
     T: IntoSV,

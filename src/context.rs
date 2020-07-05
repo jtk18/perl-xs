@@ -173,7 +173,7 @@ impl Context {
     #[inline]
     pub fn new_av(&mut self) -> AV
     {
-        unsafe{ AV::from_raw_owned(self.perl, self.perl.newAV()) }
+        unsafe{ AV::from_raw_borrowed(self.perl, self.perl.newAV()) }
     }
 
 
@@ -181,7 +181,7 @@ impl Context {
     #[inline]
     pub fn new_hv(&mut self) -> HV
     {
-        unsafe{ HV::from_raw_owned(self.perl, self.perl.newHV()) }
+        unsafe{ HV::from_raw_borrowed(self.perl, self.perl.newHV()) }
     }
 
     /// Create a new SV to store an arbitrary Rust value.

@@ -7,23 +7,15 @@ use utf8;
 
 require_ok("XSTest");
 
-my $hv;
-
 for my $hv ({}, get_rxs_hv()) {
-    XSTest::Hash::test_store($hv, "Don't panic!", 42);
+    no_leaks_ok { XSTest::Hash::test_store($hv, "Don't panic!", 42); };
     is_deeply $hv, { "Don't panic!" => 42 }, "store latin1";
 }
 
-no_leaks_ok { XSTest::Hash::test_store({}, "Don't panic!", 42); };
-no_leaks_ok { XSTest::Hash::test_store({}, "Don't panic!", get_rxs_hv()); };
-
 for my $hv ({}, get_rxs_hv()) {
-    XSTest::Hash::test_store($hv, "Nu intrat\x{0326}i i\x{0302}n panica\x{0306}!", 42);
+    no_leaks_ok { XSTest::Hash::test_store($hv, "Nu intrat\x{0326}i i\x{0302}n panica\x{0306}!", 42); };
     is_deeply $hv, { "Nu intrat\x{0326}i i\x{0302}n panica\x{0306}!" => 42 }, "store unicode";
 }
-
-no_leaks_ok { XSTest::Hash::test_store({}, "Nu intrat\x{0326}i i\x{0302}n panica\x{0306}!", 42); };
-no_leaks_ok { XSTest::Hash::test_store({}, "Nu intrat\x{0326}i i\x{0302}n panica\x{0306}!", get_rxs_hv()); };
 
 for my $hv (get_hv_pair({ "Don't panic!" => 42 })) {
     is XSTest::Hash::test_exists($hv, "Don't panic!"), 1, "exists";
@@ -82,14 +74,17 @@ for my $hv (get_hv_pair({ a => 1, b => 20, c => 300, d => 4000 })) {
 done_testing;
 
 sub get_rxs_hv {
-    my %hv = XSTest::Hash::test_new();
-    return \%hv;
+    my $t = [XSTest::Hash::test_new()];
+    return \$t->[0];
 }
 
 sub get_rxs_hv_filled {
     my ($input_hr) = @_;
     my %hv = XSTest::Hash::test_new();
+    use Data::Dumper;
+    print Dumper(\%hv);
     @hv{keys %$input_hr} = values %$input_hr;
+    print Dumper(\%hv);
     return \%hv;
 }
 

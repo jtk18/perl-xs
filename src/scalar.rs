@@ -186,7 +186,7 @@ impl SV {
     /// Return `None` if `self` is not an array reference.
     #[inline]
     pub fn deref_av(&self) -> Option<AV> {
-        self.deref().and_then(|sv| sv.into_av())
+        self.deref().and_then(|sv| sv.cast_av())
     }
 
     /// Dereference RV into HV.
@@ -194,12 +194,12 @@ impl SV {
     /// Return `None` if `self` is not a hash reference.
     #[inline]
     pub fn deref_hv(&self) -> Option<HV> {
-        self.deref().and_then(|sv| sv.into_hv())
+        self.deref().and_then(|sv| sv.cast_hv())
     }
 
     /// Cast SV into AV.
     #[inline]
-    pub fn into_av(self) -> Option<AV> {
+    pub fn cast_av(self) -> Option<AV> {
         if self.is_array() {
             Some(unsafe { AV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
         } else {
@@ -209,7 +209,7 @@ impl SV {
 
     /// Cast SV into HV.
     #[inline]
-    pub fn into_hv(self) -> Option<HV> {
+    pub fn cast_hv(self) -> Option<HV> {
         if self.is_hash() {
             Some(unsafe { HV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
         } else {
