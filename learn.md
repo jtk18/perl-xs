@@ -2,6 +2,10 @@
 
 Trying to learn how this is all wired together in effort to contribute.
 
+## Running tests
+
+`prove -wlmv -Iblib/arch -Iblib/lib  -Iinc t/hash.**t**`
+
 ## SV
 
 `perl-xs/t/t/scalar-new.t`
