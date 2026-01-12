@@ -94,16 +94,16 @@ impl HV {
     /// Construct new HV from a raw pointer without incrementing reference counter (raw pointer
     /// already "owns" one incref).
     #[inline]
-    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV {
+    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV { unsafe {
         HV(Owned::from_raw_owned(pthx, raw))
-    }
+    }}
 
     /// Construct new HV from a raw pointer and increment its reference counter (raw pointer is
     /// "borrowed" from another structure that owns one incref).
     #[inline]
-    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV {
+    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV { unsafe {
         HV(Owned::from_raw_borrowed(pthx, raw))
-    }
+    }}
 
     /// Get an iterator over the hash.
     #[inline]
@@ -127,7 +127,7 @@ impl HV {
 impl TryFromSV for HV {
     type Error = &'static str;
 
-    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<HV, Self::Error> {
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<HV, Self::Error> { unsafe {
         if pthx.ouroboros_sv_rok(raw) == 0 {
             return Err("not a hash reference");
         }
@@ -136,7 +136,7 @@ impl TryFromSV for HV {
             pthx,
             pthx.ouroboros_sv_rv(raw) as *mut _,
         ))
-    }
+    }}
 }
 
 pub struct Iter<'a, T> {

@@ -46,7 +46,8 @@ fn panic_with_code(code: c_int) -> ! {
 pub unsafe fn try_rethrow(perl: Perl, err: Box<dyn Any>) -> Box<dyn Any> {
     if let Some(&Carrier(_code)) = err.downcast_ref() {
         mem::drop(err);
-        perl.ouroboros_xcpt_rethrow();
+        // Rust 2024: explicit unsafe block required
+        unsafe { perl.ouroboros_xcpt_rethrow() };
         unreachable!();
     }
     err
@@ -87,8 +88,8 @@ pub unsafe fn try_rethrow(perl: Perl, err: Box<dyn Any>) -> Box<dyn Any> {
 #[cfg(perl_multiplicity)]
 #[macro_export]
 macro_rules! pthx {
-    ($( #[$me:meta] )* fn $id:ident ( $ctx:ident $(, $pid:ident : $pty:ty )* ) -> $rty:ty $body:block) => ($( #[$me] )* pub extern "C" fn $id ($ctx: *mut $crate::types::PerlInterpreter $(, $pid : $pty )*) -> $rty $body);
-    ($( #[$me:meta] )* fn $id:ident ( $ctx:ident $(, $pid:ident : $pty:ty )* ) $body:block) => ($( #[$me] )* pub extern "C" fn $id ($ctx: *mut $crate::types::PerlInterpreter $(, $pid : $pty )*) $body);
+    ($( #[$me:meta] )* fn $id:ident ( $ctx:ident $(, $pid:ident : $pty:ty )* ) -> $rty:ty $body:block) => ($( #[$me] )* pub unsafe extern "C" fn $id ($ctx: *mut $crate::types::PerlInterpreter $(, $pid : $pty )*) -> $rty $body);
+    ($( #[$me:meta] )* fn $id:ident ( $ctx:ident $(, $pid:ident : $pty:ty )* ) $body:block) => ($( #[$me] )* pub unsafe extern "C" fn $id ($ctx: *mut $crate::types::PerlInterpreter $(, $pid : $pty )*) $body);
 
     ($id:ident ( $ctx:expr $(, $p:expr )* $(,)* )) => ($id($ctx $(, $p )*));
 }
@@ -96,8 +97,8 @@ macro_rules! pthx {
 #[cfg(not(perl_multiplicity))]
 #[macro_export]
 macro_rules! pthx {
-    ($(#[$me:meta])* fn $id:ident ( $ctx:ident $(, $pid:ident : $pty:ty )* ) -> $rty:ty $body:block) => ($(#[$me])* pub extern "C" fn $id ($( $pid : $pty ),*) -> $rty { let $ctx = (); $body });
-    ($(#[$me:meta])* fn $id:ident ( $ctx:ident $(, $pid:ident : $pty:ty )* ) $body:block) => ($(#[$me])* pub extern "C" fn $id ($( $pid : $pty ),*) { let $ctx = (); $body });
+    ($(#[$me:meta])* fn $id:ident ( $ctx:ident $(, $pid:ident : $pty:ty )* ) -> $rty:ty $body:block) => ($(#[$me])* pub unsafe extern "C" fn $id ($( $pid : $pty ),*) -> $rty { let $ctx = (); $body });
+    ($(#[$me:meta])* fn $id:ident ( $ctx:ident $(, $pid:ident : $pty:ty )* ) $body:block) => ($(#[$me])* pub unsafe extern "C" fn $id ($( $pid : $pty ),*) { let $ctx = (); $body });
 
     ($id:ident ( $ctx:expr $(, $p:expr )* $(,)* )) => ($id($( $p ),*));
 }

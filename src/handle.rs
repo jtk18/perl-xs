@@ -50,14 +50,14 @@ pub struct Owned<T: HasRefCnt>(Ref<T>);
 
 impl<T: HasRefCnt> Owned<T> {
     #[inline]
-    pub unsafe fn from_raw_owned(pthx: Interpreter, raw: *mut T) -> Owned<T> {
+    pub unsafe fn from_raw_owned(pthx: Interpreter, raw: *mut T) -> Owned<T> { unsafe {
         Owned(Ref::from_raw(pthx, raw))
-    }
+    }}
 
     #[inline]
-    pub unsafe fn from_raw_borrowed(pthx: Interpreter, raw: *mut T) -> Owned<T> {
+    pub unsafe fn from_raw_borrowed(pthx: Interpreter, raw: *mut T) -> Owned<T> { unsafe {
         Ref::from_raw(pthx, raw).to_owned()
-    }
+    }}
 }
 
 impl<T: HasRefCnt> Drop for Owned<T> {

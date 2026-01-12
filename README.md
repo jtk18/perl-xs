@@ -1,5 +1,7 @@
 # Perl XS for Rust
 
+[![CI](https://github.com/jtk18/perl-xs/actions/workflows/ci.yml/badge.svg)](https://github.com/jtk18/perl-xs/actions/workflows/ci.yml)
+
 High-level Rust bindings to Perl XS API, allowing you to write Perl extensions in Rust.
 
 ## Example
@@ -36,8 +38,8 @@ simpler and safer API.
 
 ## Prerequisites
 
-- Perl 5.20+ (tested with 5.38)
-- Rust 1.70+
+- Perl 5.20+ (tested with 5.34, 5.36, 5.38, 5.40)
+- Rust 1.85+ (uses Rust 2024 edition)
 
 ## Quick Start
 

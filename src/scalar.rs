@@ -135,11 +135,11 @@ impl SV {
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
     #[inline]
-    pub unsafe fn as_slice(&self) -> &[u8] {
+    pub unsafe fn as_slice(&self) -> &[u8] { unsafe {
         let mut len = 0;
         let ptr = self.pthx().ouroboros_sv_pv(self.as_ptr(), &mut len);
         slice::from_raw_parts(ptr as *const u8, len as usize)
-    }
+    }}
 
     /// Return a copy of string in the SV as a vector of bytes.
     ///
@@ -165,9 +165,9 @@ impl SV {
     }
 
     #[inline]
-    unsafe fn deref_raw(&self) -> *mut raw::SV {
+    unsafe fn deref_raw(&self) -> *mut raw::SV { unsafe {
         self.pthx().ouroboros_sv_rv(self.as_ptr())
-    }
+    }}
 
     /// Dereference RV.
     ///
@@ -304,9 +304,9 @@ impl SV {
     /// Owned SV pointers are returned by assorted
     /// [`newSV`](http://perldoc.perl.org/perlapi.html#newSV) functions.
     #[inline]
-    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
+    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV { unsafe {
         SV(Owned::from_raw_owned(pthx, raw))
-    }
+    }}
 
     /// Construct new instance from a raw SV pointer and increment reference counter.
     ///
@@ -314,9 +314,9 @@ impl SV {
     /// [`av_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch) or
     /// [`hv_fetch`](http://perldoc.perl.org/perlapi.html#hv_fetch).
     #[inline]
-    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
+    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV { unsafe {
         SV(Owned::from_raw_borrowed(pthx, raw))
-    }
+    }}
 
     #[inline]
     fn pthx(&self) -> raw::Interpreter {
@@ -337,30 +337,30 @@ impl Clone for SV {
 
 impl FromSV for IV {
     #[inline]
-    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> IV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> IV { unsafe {
         pthx.ouroboros_sv_iv(raw)
-    }
+    }}
 }
 
 impl FromSV for UV {
     #[inline]
-    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> UV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> UV { unsafe {
         pthx.ouroboros_sv_uv(raw)
-    }
+    }}
 }
 
 impl FromSV for NV {
     #[inline]
-    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> NV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> NV { unsafe {
         pthx.ouroboros_sv_nv(raw)
-    }
+    }}
 }
 
 impl FromSV for SV {
     #[inline]
-    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV { unsafe {
         SV::from_raw_borrowed(pthx, raw)
-    }
+    }}
 }
 
 macro_rules! from_sv_for_option {
@@ -368,13 +368,13 @@ macro_rules! from_sv_for_option {
         /// Return `Some(v)` if scalar value is defined, `None` otherwise.
         impl FromSV for Option<$ty> {
             #[inline]
-            unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Option<$ty> {
+            unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Option<$ty> { unsafe {
                 if pthx.ouroboros_sv_ok(raw) != 0 {
                     Some(pthx.$fn(raw))
                 } else {
                     None
                 }
-            }
+            }}
         }
     )*)
 }
@@ -389,12 +389,12 @@ impl TryFromSV for String {
     type Error = std::str::Utf8Error;
 
     #[inline]
-    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<Self, Self::Error> {
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<Self, Self::Error> { unsafe {
         let mut len = 0;
         let ptr = pthx.ouroboros_sv_pv(raw, &mut len);
         let bytes = slice::from_raw_parts(ptr as *const u8, len as usize);
         Ok(std::str::from_utf8(bytes)?.to_owned())
-    }
+    }}
 }
 
 impl IntoSV for IV {
@@ -434,9 +434,9 @@ impl IntoSV for bool {
 
 impl FromSV for bool {
     #[inline]
-    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> bool {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> bool { unsafe {
         pthx.ouroboros_sv_true(raw) != 0
-    }
+    }}
 }
 
 impl IntoSV for String {
@@ -569,19 +569,19 @@ impl<T: ?Sized> Deref for DataRef<T> {
 impl TryFromSV for DataRef<dyn Any> {
     type Error = &'static str;
 
-    unsafe fn try_from_sv(pthx: raw::Interpreter, sv: *mut raw::SV) -> Result<Self, Self::Error> {
+    unsafe fn try_from_sv(pthx: raw::Interpreter, sv: *mut raw::SV) -> Result<Self, Self::Error> { unsafe {
         let outer = SV::from_raw_borrowed(pthx, sv);
         let inner = outer.deref().ok_or("not a reference")?;
         inner.into_data_ref().ok_or("invalid value")
-    }
+    }}
 }
 
 impl<T: 'static> TryFromSV for DataRef<T> {
     type Error = &'static str;
 
-    unsafe fn try_from_sv(pthx: raw::Interpreter, svp: *mut raw::SV) -> Result<Self, Self::Error> {
+    unsafe fn try_from_sv(pthx: raw::Interpreter, svp: *mut raw::SV) -> Result<Self, Self::Error> { unsafe {
         DataRef::<dyn Any>::try_from_sv(pthx, svp)?
             .downcast()
             .ok_or("invalid value")
-    }
+    }}
 }

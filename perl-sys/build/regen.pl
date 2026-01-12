@@ -360,24 +360,31 @@ sub proxy_method {
         take_self => "&self",
     });
 
+    # Rust 2024: unsafe fn bodies require explicit unsafe blocks
     my @body;
     if ($can_throw) {
-        push @body, let("mut $retval", map_type($fn->{type}), "::std::mem::zeroed()")
+        my @inner;
+        push @inner, let("mut $retval", map_type($fn->{type}), "::std::mem::zeroed()")
             if $use_retval;
 
-        push @body, let("rc", undef, do {
+        push @inner, let("rc", undef, do {
             local $" = ", ";
             "crate::fn_wrappers::$fn->{name}(@actual)"
         });
 
-        push @body, rif("rc != 0", [
+        push @inner, rif("rc != 0", [
             "crate::panic_with_code(rc)",
         ]);
 
-        push @body, $retval if $use_retval;
+        push @inner, $retval if $use_retval;
+
+        # Wrap in unsafe block
+        push @body, "unsafe {";
+        push @body, indent(@inner);
+        push @body, "}";
     } else {
         local $" = ", ";
-        push @body, "crate::fn_bindings::$fn->{name}(@actual)";
+        push @body, "unsafe { crate::fn_bindings::$fn->{name}(@actual) }";
     }
 
     return (

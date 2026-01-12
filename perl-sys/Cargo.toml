@@ -4,8 +4,8 @@ version = "0.2.0"
 authors = ["Vickenty Fesunov <kent@setattr.net>"]
 build = "build/build.rs"
 license = "BSD-2-Clause"
-edition = "2021"
-rust-version = "1.70"
+edition = "2024"
+rust-version = "1.85"
 description = "Low-level Perl XS bindings for Rust"
 
 [build-dependencies]

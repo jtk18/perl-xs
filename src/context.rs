@@ -76,7 +76,7 @@ impl Context {
         unsafe { self.perl.ouroboros_stack_items(&mut self.stack) as isize }
     }
 
-    unsafe fn st_fetch_raw(&mut self, idx: isize) -> Option<*mut raw::SV> {
+    unsafe fn st_fetch_raw(&mut self, idx: isize) -> Option<*mut raw::SV> { unsafe {
         if idx >= self.st_items() {
             return None;
         }
@@ -87,7 +87,7 @@ impl Context {
         }
 
         Some(svp)
-    }
+    }}
 
     /// Fetch value from the Perl stack.
     ///

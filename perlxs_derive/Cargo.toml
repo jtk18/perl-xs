@@ -2,8 +2,8 @@
 name = "perlxs_derive"
 version = "0.2.0"
 authors = ["perl-xs Authors"]
-edition = "2021"
-rust-version = "1.70"
+edition = "2024"
+rust-version = "1.85"
 description = "Derive macros for perl-xs"
 license = "BSD-2-Clause"
 

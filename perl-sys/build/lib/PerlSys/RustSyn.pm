@@ -35,7 +35,7 @@ our %EXPORT_TAGS = (all => \@EXPORT_OK);
 use constant {
     TYPEMAP => {
         "ouroboros_stack_t" => "OuroborosStack",
-        "ouroboros_xcpt_callback_t" => "extern fn(*mut ::std::os::raw::c_void)",
+        "ouroboros_xcpt_callback_t" => "unsafe extern \"C\" fn(*mut ::std::os::raw::c_void)",
 
         "void" => "::std::os::raw::c_void",
         "int" => "::std::os::raw::c_int",
@@ -66,7 +66,7 @@ use constant {
         "Gid_t" => "u32",  # group ID type
         "Time_t" => "i64",  # time type
         "Signal_t" => "::std::os::raw::c_void",  # signal return type (void)
-        "Sighandler_t" => "extern fn(::std::os::raw::c_int)",  # signal handler
+        "Sighandler_t" => "unsafe extern \"C\" fn(::std::os::raw::c_int)",  # signal handler
         "Sigjmp_buf" => "::std::os::raw::c_void",  # sigjmp_buf opaque
 
         # Perl string types
@@ -118,9 +118,9 @@ use constant {
         "PTR_TBL_t" => "::std::os::raw::c_void",
 
         # Function pointer types
-        "Perl_ppaddr_t" => "extern fn(*mut PerlInterpreter) -> *mut OP",
-        "Perl_check_t" => "extern fn(*mut PerlInterpreter, *mut OP) -> *mut OP",
-        "Perl_ophook_t" => "extern fn(*mut PerlInterpreter, *mut OP)",
+        "Perl_ppaddr_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter) -> *mut OP",
+        "Perl_check_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter, *mut OP) -> *mut OP",
+        "Perl_ophook_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter, *mut OP)",
 
         # Additional Perl types
         "STRLEN_UNDEF_OK" => "Size_t",
@@ -152,9 +152,9 @@ use constant {
 
         # Debugging types
         "debug_file" => "::std::os::raw::c_void",
-        "runops_proc_t" => "extern fn(*mut PerlInterpreter) -> ::std::os::raw::c_int",
-        "Perl_keyword_plugin_t" => "extern fn(*mut PerlInterpreter, *mut ::std::os::raw::c_char, STRLEN, *mut *mut OP) -> ::std::os::raw::c_int",
-        "XSINIT_t" => "extern fn(*mut PerlInterpreter)",
+        "runops_proc_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter) -> ::std::os::raw::c_int",
+        "Perl_keyword_plugin_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter, *mut ::std::os::raw::c_char, STRLEN, *mut *mut OP) -> ::std::os::raw::c_int",
+        "XSINIT_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter)",
 
         # Hash types
         "HEK" => "::std::os::raw::c_void",
@@ -175,7 +175,7 @@ use constant {
         "ScanDataFlags_t" => "U32",
 
         # Filter types
-        "filter_t" => "extern fn(*mut PerlInterpreter, ::std::os::raw::c_int, *mut SV, ::std::os::raw::c_int) -> I32",
+        "filter_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter, ::std::os::raw::c_int, *mut SV, ::std::os::raw::c_int) -> I32",
 
         # More Perl types
         "NV_U" => "NV",
@@ -261,7 +261,7 @@ use constant {
         "utf8n_flags_t" => "U32",
 
         # Sort types
-        "SVCOMPARE_t" => "extern fn(*mut PerlInterpreter, *mut SV, *mut SV) -> I32",
+        "SVCOMPARE_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter, *mut SV, *mut SV) -> I32",
 
         # GV additional
         "gv_fetchmethod_flags_t" => "U32",
@@ -269,8 +269,8 @@ use constant {
         # Additional Perl internals
         "BUF_PAT_DEPTH_T" => "U32",
         "Line_t" => "U32",
-        "Perl_cpeep_t" => "extern fn(*mut PerlInterpreter, *mut OP, *mut OP)",
-        "Perl_call_checker" => "extern fn(*mut PerlInterpreter, *mut OP, *mut GV, *mut SV) -> *mut OP",
+        "Perl_cpeep_t" => "unsafe extern \"C\" fn(*mut PerlInterpreter, *mut OP, *mut OP)",
+        "Perl_call_checker" => "unsafe extern \"C\" fn(*mut PerlInterpreter, *mut OP, *mut GV, *mut SV) -> *mut OP",
     },
 };
 
@@ -335,8 +335,9 @@ sub type {
 
 sub extern {
     my ($abi, @items) = @_;
+    # Rust 2024 requires unsafe on extern blocks
     return (
-        "extern \"$abi\" {",
+        "unsafe extern \"$abi\" {",
         indent(@items),
         "}",
     );
@@ -380,7 +381,8 @@ sub fn {
 sub extern_fn {
     my ($type, @args) = @_;
 
-    return _fn('extern "C"', {
+    # Rust 2024 requires unsafe on extern fn types
+    return _fn('unsafe extern "C"', {
         type => $type,
         name => "",
         args => [ map [ $_ ], @args ],
@@ -391,7 +393,8 @@ sub extern_fn {
 sub callback_fn {
     my ($type, $pthx, @args) = @_;
 
-    return _fn('extern "C"', {
+    # Rust 2024 requires unsafe on extern fn types
+    return _fn('unsafe extern "C"', {
         type => $type,
         name => "",
         args => \@args,
