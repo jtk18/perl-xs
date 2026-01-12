@@ -1,9 +1,10 @@
 use std::marker::PhantomData;
+use std::mem;
 use std::mem::MaybeUninit;
 use std::slice::from_raw_parts;
 
 use crate::SV;
-use crate::convert::{FromSV, TryFromSV};
+use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::handle::Owned;
 use crate::raw;
 
@@ -121,6 +122,29 @@ impl HV {
     #[inline]
     pub fn keys(&self) -> Keys<'_> {
         Keys::new(self)
+    }
+
+    /// Consume HV and convert into raw pointer.
+    ///
+    /// Does not decrement reference count. Returned pointer must be correctly disposed of to avoid
+    /// memory leaks.
+    #[inline]
+    pub fn into_raw(self) -> *mut raw::HV {
+        let raw = self.0.as_ptr();
+        mem::forget(self);
+        raw
+    }
+
+    /// Create a new reference to this hash, transferring ownership to the reference.
+    ///
+    /// This returns an SV that is a reference to the hash, suitable for returning to Perl.
+    #[inline]
+    pub fn into_ref(self) -> SV {
+        let pthx = self.pthx();
+        unsafe {
+            let rv = pthx.newRV_noinc(self.into_raw() as *mut raw::SV);
+            SV::from_raw_owned(pthx, rv)
+        }
     }
 }
 
@@ -250,5 +274,16 @@ impl<'a> IntoIterator for &'a HV {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+/// Convert HV into an SV reference.
+///
+/// This creates a reference to the hash, suitable for returning to Perl.
+impl IntoSV for HV {
+    #[inline]
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        assert!(self.pthx() == pthx);
+        self.into_ref()
     }
 }

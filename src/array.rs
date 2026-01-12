@@ -1,7 +1,8 @@
 use std::marker::PhantomData;
+use std::mem;
 
 use crate::SV;
-use crate::convert::{FromSV, TryFromSV};
+use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::handle::Owned;
 use crate::raw;
 use crate::raw::SSize_t;
@@ -136,6 +137,29 @@ impl AV {
     pub fn iter<T: FromSV>(&self) -> IterAV<'_, T> {
         IterAV::new(self)
     }
+
+    /// Consume AV and convert into raw pointer.
+    ///
+    /// Does not decrement reference count. Returned pointer must be correctly disposed of to avoid
+    /// memory leaks.
+    #[inline]
+    pub fn into_raw(self) -> *mut raw::AV {
+        let raw = self.0.as_ptr();
+        mem::forget(self);
+        raw
+    }
+
+    /// Create a new reference to this array, transferring ownership to the reference.
+    ///
+    /// This returns an SV that is a reference to the array, suitable for returning to Perl.
+    #[inline]
+    pub fn into_ref(self) -> SV {
+        let pthx = self.pthx();
+        unsafe {
+            let rv = pthx.newRV_noinc(self.into_raw() as *mut raw::SV);
+            SV::from_raw_owned(pthx, rv)
+        }
+    }
 }
 
 impl TryFromSV for AV {
@@ -181,5 +205,16 @@ impl<'a, T: FromSV> Iterator for IterAV<'a, T> {
         } else {
             None
         }
+    }
+}
+
+/// Convert AV into an SV reference.
+///
+/// This creates a reference to the array, suitable for returning to Perl.
+impl IntoSV for AV {
+    #[inline]
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        assert!(self.pthx() == pthx);
+        self.into_ref()
     }
 }

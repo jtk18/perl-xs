@@ -15,6 +15,7 @@ mod panic;
 mod param;
 mod data;
 mod derive;
+mod roundtrip;
 
 xs! {
     bootstrap boot_XSTest;
@@ -26,4 +27,5 @@ xs! {
     use param;
     use data;
     use derive;
+    use roundtrip;
 }

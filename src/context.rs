@@ -1,5 +1,5 @@
 //! Context for XS subroutine calls.
-use crate::{AV, SV};
+use crate::{AV, HV, SV};
 use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::raw;
 use std;
@@ -206,6 +206,36 @@ impl Context {
     /// Return an undefined SV.
     pub fn sv_undef(&mut self) -> SV {
         unsafe { SV::from_raw_owned(self.perl, self.perl.ouroboros_sv_undef()) }
+    }
+
+    // ARRAYS AND HASHES
+
+    /// Create a new empty Perl array.
+    ///
+    /// Returns an AV that can be populated with values.
+    ///
+    /// See: [`newAV`](http://perldoc.perl.org/perlapi.html#newAV).
+    #[inline]
+    pub fn new_av(&mut self) -> AV {
+        unsafe { AV::from_raw_owned(self.perl, self.perl.newAV()) }
+    }
+
+    /// Create a new empty Perl hash.
+    ///
+    /// Returns an HV that can be populated with key-value pairs.
+    ///
+    /// See: [`newHV`](http://perldoc.perl.org/perlapi.html#newHV).
+    #[inline]
+    pub fn new_hv(&mut self) -> HV {
+        unsafe { HV::from_raw_owned(self.perl, self.perl.newHV()) }
+    }
+
+    /// Get the raw Perl interpreter handle.
+    ///
+    /// This is useful for low-level operations that need direct access to the interpreter.
+    #[inline]
+    pub fn perl(&self) -> raw::Interpreter {
+        self.perl
     }
 }
 
