@@ -134,23 +134,56 @@ jobs:
       - name: Debug - Check built files
         working-directory: t
         run: |
+          echo "=============================================="
+          echo "DEBUG: Checking build artifacts"
+          echo "=============================================="
+          echo ""
+          echo "=== Generated Cargo.toml (full) ==="
+          cat Cargo.toml || echo "No Cargo.toml"
+          echo ""
           echo "=== blib contents ==="
           find blib -type f 2>/dev/null || echo "No blib directory"
+          echo ""
           echo "=== .so files ==="
           find . -name "*.so" -o -name "*.dylib" 2>/dev/null || echo "No shared library files"
-          echo "=== XSTest.pm location ==="
-          find . -name "XSTest.pm" 2>/dev/null
+          echo ""
           echo "=== Check for boot symbol ==="
           for so in $(find . -name "*.so" 2>/dev/null); do
-            echo "Symbols in $so:"
-            nm -D "$so" 2>/dev/null | grep -E "boot_|XSTest" || echo "No boot symbol found"
+            echo "All exported symbols in $so:"
+            nm -D "$so" 2>/dev/null | head -50 || echo "nm failed"
+            echo ""
+            echo "boot_ symbols:"
+            nm -D "$so" 2>/dev/null | grep -i "boot" || echo "No boot symbol found"
           done
-          echo "=== Try loading module ==="
-          perl -Mblib -e 'eval { require XSTest; print "Module loaded OK\n"; 1 } or print "Failed to load: $@\n"'
-          echo "=== Check available functions ==="
-          perl -Mblib -e 'require XSTest; for my $name (qw(test_new_sv_iv test_push)) { print "XSTest::$name: ", (defined &{"XSTest::$name"} ? "exists" : "MISSING"), "\n"; } for my $name (qw(test_store)) { print "XSTest::Hash::$name: ", (defined &{"XSTest::Hash::$name"} ? "exists" : "MISSING"), "\n"; }'
-          echo "=== Check @INC ==="
-          perl -Mblib -e 'print join("\n", @INC), "\n"'
+          echo ""
+          echo "=== Try loading module and check DynaLoader ==="
+          perl -Mblib -e '
+            use DynaLoader;
+            print "Attempting to load XSTest...\n";
+            eval {
+              require XSTest;
+              print "SUCCESS: Module loaded OK\n";
+              print "Checking XSTest namespace:\n";
+              no strict "refs";
+              for my $sym (sort keys %{"XSTest::"}) {
+                print "  XSTest::$sym\n" if defined &{"XSTest::$sym"};
+              }
+              print "Checking XSTest::Hash namespace:\n";
+              for my $sym (sort keys %{"XSTest::Hash::"}) {
+                print "  XSTest::Hash::$sym\n" if defined &{"XSTest::Hash::$sym"};
+              }
+              print "Checking XSTest::Roundtrip namespace:\n";
+              for my $sym (sort keys %{"XSTest::Roundtrip::"}) {
+                print "  XSTest::Roundtrip::$sym\n" if defined &{"XSTest::Roundtrip::$sym"};
+              }
+            };
+            if ($@) {
+              print "FAILED to load: $@\n";
+            }
+          '
+          echo ""
+          echo "=== Perl Config ==="
+          perl -MConfig -e 'print "usemultiplicity=$Config{usemultiplicity}\n"; print "archname=$Config{archname}\n"'
 
       - name: Run Perl integration tests
         working-directory: t
