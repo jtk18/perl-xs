@@ -125,7 +125,20 @@ jobs:
         working-directory: t
         run: |
           perl Makefile.PL
-          make
+          echo "=== Generated Cargo.toml ==="
+          cat Cargo.toml || echo "No Cargo.toml found"
+          echo "=== Building... ==="
+          make VERBOSE=1
+
+      - name: Debug - Check built files
+        working-directory: t
+        run: |
+          echo "=== blib contents ==="
+          find blib -type f 2>/dev/null || echo "No blib directory"
+          echo "=== .so files ==="
+          find . -name "*.so" -o -name "*.dylib" 2>/dev/null || echo "No shared library files"
+          echo "=== XSTest.pm location ==="
+          find . -name "XSTest.pm" 2>/dev/null
 
       - name: Run Perl integration tests
         working-directory: t
