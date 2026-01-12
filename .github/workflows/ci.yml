@@ -221,8 +221,9 @@ jobs:
       - name: Build workspace and XSTest
         run: |
           cargo build --workspace --release
-          cd t && rm -rf target blib Makefile 2>/dev/null || true
-          cd t && perl Makefile.PL && make
+          cd t
+          rm -rf target blib Makefile 2>/dev/null || true
+          perl Makefile.PL && make
 
       - name: Run hash tests
         if: matrix.feature == 'hashes'
@@ -302,8 +303,9 @@ jobs:
       - name: Build workspace and XSTest
         run: |
           cargo build --workspace --release
-          cd t && rm -rf target blib Makefile 2>/dev/null || true
-          cd t && perl Makefile.PL && make
+          cd t
+          rm -rf target blib Makefile 2>/dev/null || true
+          perl Makefile.PL && make
 
       - name: Run leak tests
         working-directory: t
