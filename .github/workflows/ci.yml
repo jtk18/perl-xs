@@ -229,6 +229,20 @@ jobs:
               print "This means: iteration over PERL_XS arrays is NOT working.\n";
             }
 
+            # Call debug functions to get PERL_XS array info
+            print "\n=== PERL_XS array sizes (from Rust) ===\n";
+            if (defined &XSTest::get_perl_xs_sizes) {
+              my $sizes = XSTest::get_perl_xs_sizes();
+              print "SIZES: $sizes\n";
+            } else {
+              print "ERROR: get_perl_xs_sizes not available\n";
+            }
+
+            if (defined &XSTest::get_first_stack_fn) {
+              my $first = XSTest::get_first_stack_fn();
+              print "First function in stack::PERL_XS: $first\n";
+            }
+
             # Test 3: xs! macro generated function
             if (defined &XSTest::test_push) {
               print "SUCCESS: XSTest::test_push exists (xs! macro works!)\n";
