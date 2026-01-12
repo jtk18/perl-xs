@@ -27,6 +27,21 @@ pthx! {
     }
 }
 
+// Second manual test function to verify array iteration works
+pthx! {
+    fn manual_test_fn2(pthx, _cv: *mut perl_xs::raw::CV) {
+        let perl = perl_xs::raw::initialize(pthx);
+        perl_xs::context::Context::wrap(perl, |ctx| {
+            ctx.st_push(99 as perl_xs::IV);
+        });
+    }
+}
+
+// Manual PERL_XS array to test if iteration works
+pub const MANUAL_PERL_XS: &'static [(&'static str, perl_xs::raw::XSUBADDR_t)] = &[
+    ("XSTest::manual_from_array", manual_test_fn2 as perl_xs::raw::XSUBADDR_t),
+];
+
 // Manual bootstrap - registers ONE function directly to test the mechanism
 pthx! {
     #[unsafe(no_mangle)]
@@ -40,6 +55,14 @@ pthx! {
             let name = std::ffi::CString::new("XSTest::manual_test").unwrap();
             ctx.new_xs(&name, manual_test_fn as perl_xs::raw::XSUBADDR_t);
             eprintln!("Registered: XSTest::manual_test");
+
+            // Test registering from a hardcoded array
+            eprintln!("MANUAL_PERL_XS has {} entries", MANUAL_PERL_XS.len());
+            for &(subname, subptr) in MANUAL_PERL_XS {
+                eprintln!("Registering from manual array: {}", subname);
+                let cname = std::ffi::CString::new(subname).unwrap();
+                ctx.new_xs(&cname, subptr);
+            }
 
             // Debug: print PERL_XS array sizes
             eprintln!("stack::PERL_XS has {} entries", stack::PERL_XS.len());

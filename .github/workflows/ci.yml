@@ -211,10 +211,30 @@ jobs:
           # This step MUST succeed - if it fails, bootstrap mechanism is broken
           perl -Mblib -e '
             require XSTest;
+
+            # Test 1: direct manual registration
             die "FATAL: XSTest::manual_test does NOT exist - bootstrap is not registering functions!" unless defined &XSTest::manual_test;
             my $result = XSTest::manual_test();
             die "FATAL: XSTest::manual_test returned $result instead of 42!" unless $result == 42;
             print "SUCCESS: XSTest::manual_test exists and returns $result\n";
+
+            # Test 2: manual PERL_XS array registration (proves iteration works)
+            if (defined &XSTest::manual_from_array) {
+              my $result2 = XSTest::manual_from_array();
+              print "SUCCESS: XSTest::manual_from_array exists and returns $result2\n";
+              print "This proves: iterating over PERL_XS-style arrays works!\n";
+            } else {
+              print "WARNING: XSTest::manual_from_array does NOT exist\n";
+              print "This means: iteration over PERL_XS arrays is NOT working.\n";
+            }
+
+            # Test 3: xs! macro generated function
+            if (defined &XSTest::test_push) {
+              print "SUCCESS: XSTest::test_push exists (xs! macro works!)\n";
+            } else {
+              print "FAIL: XSTest::test_push does NOT exist\n";
+              print "The xs! macro is NOT generating working PERL_XS arrays.\n";
+            }
           '
 
       - name: Run Perl integration tests
