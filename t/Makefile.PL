@@ -18,8 +18,6 @@ rust_requires "perl-sys" => { path => "../perl-sys" };
 rust_requires "perlxs_derive" => { path => "../perlxs_derive" };
 rust_requires "cstr" => "0.2";
 
-# Set crate type to cdylib for dynamic loading
-rust_profile release => { lto => "false" };
 rust_write;
 
 WriteAll;
