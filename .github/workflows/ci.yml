@@ -185,21 +185,24 @@ jobs:
           echo "=== Perl Config ==="
           perl -MConfig -e 'print "usemultiplicity=$Config{usemultiplicity}\n"; print "archname=$Config{archname}\n"'
           echo ""
-          echo "=== Minimal Function Test ==="
+          echo "=== Manual Registration Test ==="
           perl -Mblib -e '
             require XSTest;
-            print "Testing if minimal function exists...\n";
-            if (defined &XSTest::Minimal::test) {
-              print "SUCCESS: XSTest::Minimal::test EXISTS!\n";
-              my $result = XSTest::Minimal::test();
+            print "Testing MANUAL function registration (bypasses xs! macro)...\n";
+            if (defined &XSTest::manual_test) {
+              print "SUCCESS: XSTest::manual_test EXISTS!\n";
+              my $result = XSTest::manual_test();
               print "  Result: $result (expected 42)\n";
+              print "This proves the registration mechanism works!\n";
             } else {
-              print "FAIL: XSTest::Minimal::test does NOT exist\n";
-              print "This means the xs! macro bootstrap is not registering functions.\n";
+              print "FAIL: XSTest::manual_test does NOT exist\n";
+              print "This means even manual registration via new_xs does not work.\n";
+              print "The issue is in the bootstrap mechanism itself.\n";
             }
-            print "\nChecking other namespaces:\n";
+            print "\nChecking xs! macro-generated functions:\n";
             print "XSTest::test_push: ", (defined &XSTest::test_push ? "exists" : "MISSING"), "\n";
             print "XSTest::Hash::test_store: ", (defined &{"XSTest::Hash::test_store"} ? "exists" : "MISSING"), "\n";
+            print "XSTest::Roundtrip::roundtrip_iv: ", (defined &{"XSTest::Roundtrip::roundtrip_iv"} ? "exists" : "MISSING"), "\n";
           '
 
       - name: Run Perl integration tests
