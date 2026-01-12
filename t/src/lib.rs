@@ -19,17 +19,13 @@ mod roundtrip;
 
 // Diagnostic module to verify bootstrap works
 mod diagnostic {
-    use perl_xs::IV;
-
     xs! {
         package XSTest::Diagnostic;
 
-        // Simple function that returns 1 - if this exists, bootstrap ran
         sub bootstrap_ran(ctx) {
-            1 as IV
+            1 as perl_xs::IV
         }
 
-        // Return count of PERL_XS entries from other modules
         sub function_count(ctx) {
             let count = super::stack::PERL_XS.len() +
                         super::scalar::PERL_XS.len() +
@@ -40,7 +36,7 @@ mod diagnostic {
                         super::data::PERL_XS.len() +
                         super::derive::PERL_XS.len() +
                         super::roundtrip::PERL_XS.len();
-            count as IV
+            count as perl_xs::IV
         }
     }
 }
