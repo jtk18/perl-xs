@@ -205,6 +205,18 @@ jobs:
             print "XSTest::Roundtrip::roundtrip_iv: ", (defined &{"XSTest::Roundtrip::roundtrip_iv"} ? "exists" : "MISSING"), "\n";
           '
 
+      - name: Verify manual registration works
+        working-directory: t
+        run: |
+          # This step MUST succeed - if it fails, bootstrap mechanism is broken
+          perl -Mblib -e '
+            require XSTest;
+            die "FATAL: XSTest::manual_test does NOT exist - bootstrap is not registering functions!" unless defined &XSTest::manual_test;
+            my $result = XSTest::manual_test();
+            die "FATAL: XSTest::manual_test returned $result instead of 42!" unless $result == 42;
+            print "SUCCESS: XSTest::manual_test exists and returns $result\n";
+          '
+
       - name: Run Perl integration tests
         working-directory: t
         run: |
