@@ -18,10 +18,10 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 
-use std::mem;
-use std::panic;
 use std::any::Any;
+use std::mem;
 use std::os::raw::c_int;
+use std::panic;
 
 include!(concat!(env!("OUT_DIR"), "/perl_sys.rs"));
 

@@ -1,7 +1,7 @@
 //! Context for XS subroutine calls.
-use crate::{AV, HV, SV};
 use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::raw;
+use crate::{AV, HV, SV};
 use std;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
@@ -13,7 +13,6 @@ pub struct Context {
 }
 
 const EMPTY: &'static [i8] = &[0];
-
 
 impl Context {
     /// Invoke closure with the context of Perl subroutine call.
@@ -76,18 +75,19 @@ impl Context {
         unsafe { self.perl.ouroboros_stack_items(&mut self.stack) as isize }
     }
 
-    unsafe fn st_fetch_raw(&mut self, idx: isize) -> Option<*mut raw::SV> { unsafe {
-        if idx >= self.st_items() {
-            return None;
-        }
-        let svp = self.perl
-            .ouroboros_stack_fetch(&mut self.stack, idx as raw::SSize_t);
-        if svp.is_null() {
-            return None;
-        }
+    unsafe fn st_fetch_raw(&mut self, idx: isize) -> Option<*mut raw::SV> {
+        unsafe {
+            if idx >= self.st_items() {
+                return None;
+            }
+            let svp = self.perl.ouroboros_stack_fetch(&mut self.stack, idx as raw::SSize_t);
+            if svp.is_null() {
+                return None;
+            }
 
-        Some(svp)
-    }}
+            Some(svp)
+        }
+    }
 
     /// Fetch value from the Perl stack.
     ///
@@ -106,10 +106,7 @@ impl Context {
     where
         T: TryFromSV,
     {
-        unsafe {
-            self.st_fetch_raw(idx)
-                .map(|svp| T::try_from_sv(self.perl, svp))
-        }
+        unsafe { self.st_fetch_raw(idx).map(|svp| T::try_from_sv(self.perl, svp)) }
     }
 
     /// Push value onto Perl stack.
@@ -121,10 +118,7 @@ impl Context {
         T: IntoSV,
     {
         let sv = val.into_sv(self.perl);
-        unsafe {
-            self.perl
-                .ouroboros_stack_xpush_sv_mortal(&mut self.stack, sv.into_raw())
-        };
+        unsafe { self.perl.ouroboros_stack_xpush_sv_mortal(&mut self.stack, sv.into_raw()) };
     }
 
     // XSUB

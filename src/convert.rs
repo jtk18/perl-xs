@@ -43,9 +43,9 @@ where
     T: FromSV,
 {
     type Error = &'static str;
-    unsafe fn try_from_sv(perl: raw::Interpreter, raw: *mut raw::SV) -> Result<T, Self::Error> { unsafe {
-        Ok(T::from_sv(perl, raw))
-    }}
+    unsafe fn try_from_sv(perl: raw::Interpreter, raw: *mut raw::SV) -> Result<T, Self::Error> {
+        unsafe { Ok(T::from_sv(perl, raw)) }
+    }
 }
 
 /// Construct new `Self` from `key value pairs of the XSUB context`.

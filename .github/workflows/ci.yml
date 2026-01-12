@@ -115,8 +115,8 @@ jobs:
           cargo --version
           perl -v | head -2
           perl -MConfig -e 'print "archname=$Config{archname}\n"'
-          perl -MModule::Install -e 'print "Module::Install $Module::Install::VERSION\n"'
-          perl -MModule::Install::Rust -e 'print "Module::Install::Rust $Module::Install::Rust::VERSION\n"'
+          perl -MModule::Install -e 'print "Module::Install $Module::Install::VERSION\n"' || echo "Module::Install not available"
+          perl -MModule::Install::Rust -e 'print "Module::Install::Rust $Module::Install::Rust::VERSION\n"' || echo "Module::Install::Rust not available (will be used during build)"
 
       - name: Build Rust workspace
         run: cargo build --workspace --release

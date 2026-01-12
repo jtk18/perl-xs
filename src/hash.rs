@@ -79,13 +79,9 @@ impl HV {
     pub fn store(&self, key: &str, val: SV) {
         unsafe {
             let raw = val.into_raw();
-            let svpp = self.pthx().hv_store(
-                self.as_ptr(),
-                key.as_ptr() as *const _,
-                -(key.len() as raw::I32),
-                raw,
-                0,
-            );
+            let svpp = self
+                .pthx()
+                .hv_store(self.as_ptr(), key.as_ptr() as *const _, -(key.len() as raw::I32), raw, 0);
             if svpp.is_null() {
                 self.pthx().ouroboros_sv_refcnt_dec(raw)
             }
@@ -95,16 +91,16 @@ impl HV {
     /// Construct new HV from a raw pointer without incrementing reference counter (raw pointer
     /// already "owns" one incref).
     #[inline]
-    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV { unsafe {
-        HV(Owned::from_raw_owned(pthx, raw))
-    }}
+    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV {
+        unsafe { HV(Owned::from_raw_owned(pthx, raw)) }
+    }
 
     /// Construct new HV from a raw pointer and increment its reference counter (raw pointer is
     /// "borrowed" from another structure that owns one incref).
     #[inline]
-    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV { unsafe {
-        HV(Owned::from_raw_borrowed(pthx, raw))
-    }}
+    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV {
+        unsafe { HV(Owned::from_raw_borrowed(pthx, raw)) }
+    }
 
     /// Get an iterator over the hash.
     #[inline]
@@ -151,16 +147,15 @@ impl HV {
 impl TryFromSV for HV {
     type Error = &'static str;
 
-    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<HV, Self::Error> { unsafe {
-        if pthx.ouroboros_sv_rok(raw) == 0 {
-            return Err("not a hash reference");
-        }
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<HV, Self::Error> {
+        unsafe {
+            if pthx.ouroboros_sv_rok(raw) == 0 {
+                return Err("not a hash reference");
+            }
 
-        Ok(HV::from_raw_borrowed(
-            pthx,
-            pthx.ouroboros_sv_rv(raw) as *mut _,
-        ))
-    }}
+            Ok(HV::from_raw_borrowed(pthx, pthx.ouroboros_sv_rv(raw) as *mut _))
+        }
+    }
 }
 
 pub struct Iter<'a, T> {
@@ -171,10 +166,7 @@ pub struct Iter<'a, T> {
 impl<'a, T> Iter<'a, T> {
     fn new(hv: &'a HV) -> Self {
         unsafe { hv.pthx().hv_iterinit(hv.as_ptr()) };
-        Iter {
-            hv: hv,
-            ty: PhantomData,
-        }
+        Iter { hv: hv, ty: PhantomData }
     }
 }
 
@@ -188,11 +180,7 @@ impl<'a, T: FromSV> Iterator for Iter<'a, T> {
 
             let mut k_ptr: MaybeUninit<*mut i8> = MaybeUninit::uninit();
             let mut klen: MaybeUninit<raw::I32> = MaybeUninit::uninit();
-            let v = pthx.hv_iternextsv(
-                hv_ptr,
-                k_ptr.as_mut_ptr(),
-                klen.as_mut_ptr(),
-            );
+            let v = pthx.hv_iternextsv(hv_ptr, k_ptr.as_mut_ptr(), klen.as_mut_ptr());
             if v.is_null() {
                 None
             } else {
@@ -211,10 +199,7 @@ pub struct Values<'a, T> {
 impl<'a, T> Values<'a, T> {
     fn new(hv: &'a HV) -> Self {
         unsafe { hv.pthx().hv_iterinit(hv.as_ptr()) };
-        Values {
-            hv: hv,
-            ty: PhantomData,
-        }
+        Values { hv: hv, ty: PhantomData }
     }
 }
 

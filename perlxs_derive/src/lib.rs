@@ -4,10 +4,8 @@
 
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, format_ident};
-use syn::{
-    parse_macro_input, Attribute, Data, DeriveInput, Fields, Ident, LitStr, Type,
-};
+use quote::{format_ident, quote};
+use syn::{Attribute, Data, DeriveInput, Fields, Ident, LitStr, Type, parse_macro_input};
 
 /// Derive `FromPerlKV` for a struct.
 ///
@@ -81,20 +79,24 @@ fn is_option_type(ty: &Type) -> bool {
 fn extract_fields(fields: &Fields) -> Vec<FieldInfo> {
     match fields {
         Fields::Named(named) => {
-            named.named.iter().filter_map(|f| {
-                let ident = f.ident.clone()?;
-                let ty = f.ty.clone();
+            named
+                .named
+                .iter()
+                .filter_map(|f| {
+                    let ident = f.ident.clone()?;
+                    let ty = f.ty.clone();
 
-                // Get keys from attributes or use field name
-                let mut keys = parse_field_attrs(&f.attrs);
-                if keys.is_empty() {
-                    keys.push(ident.to_string());
-                }
+                    // Get keys from attributes or use field name
+                    let mut keys = parse_field_attrs(&f.attrs);
+                    if keys.is_empty() {
+                        keys.push(ident.to_string());
+                    }
 
-                let optional = is_option_type(&ty);
+                    let optional = is_option_type(&ty);
 
-                Some(FieldInfo { ident, ty, keys, optional })
-            }).collect()
+                    Some(FieldInfo { ident, ty, keys, optional })
+                })
+                .collect()
         }
         _ => panic!("FromPerlKV can only be derived for structs with named fields"),
     }
@@ -112,65 +114,81 @@ fn impl_from_kv(input: &DeriveInput) -> TokenStream2 {
     };
 
     // Generate variable declarations
-    let var_decls: Vec<_> = fields.iter().map(|f| {
-        let var_name = format_ident!("value_{}", f.ident);
-        let ty = &f.ty;
-        quote! {
-            let mut #var_name: Option<#ty> = None
-        }
-    }).collect();
+    let var_decls: Vec<_> = fields
+        .iter()
+        .map(|f| {
+            let var_name = format_ident!("value_{}", f.ident);
+            let ty = &f.ty;
+            quote! {
+                let mut #var_name: Option<#ty> = None
+            }
+        })
+        .collect();
 
     // Generate match arms for each field
-    let match_arms: Vec<_> = fields.iter().flat_map(|f| {
-        let var_name = format_ident!("value_{}", f.ident);
-        let ty = &f.ty;
-        let ty_str = quote!(#ty).to_string();
+    let match_arms: Vec<_> = fields
+        .iter()
+        .flat_map(|f| {
+            let var_name = format_ident!("value_{}", f.ident);
+            let ty = &f.ty;
+            let ty_str = quote!(#ty).to_string();
 
-        f.keys.iter().map(|key| {
-            quote! {
-                #key => {
-                    match ctx.st_try_fetch::<#ty>(i + 1) {
-                        Some(Ok(v)) => {
-                            #var_name = Some(v);
-                        },
-                        Some(Err(e)) => {
-                            errors.push(_perlxs::error::ToStructErrPart::ValueParseFail {
-                                key: #key,
-                                ty: #ty_str,
-                                error: e.to_string(),
-                                offset: i + 1,
-                            });
-                        },
-                        None => {
-                            errors.push(_perlxs::error::ToStructErrPart::OmittedValue(#key));
-                        },
+            f.keys
+                .iter()
+                .map(|key| {
+                    quote! {
+                        #key => {
+                            match ctx.st_try_fetch::<#ty>(i + 1) {
+                                Some(Ok(v)) => {
+                                    #var_name = Some(v);
+                                },
+                                Some(Err(e)) => {
+                                    errors.push(_perlxs::error::ToStructErrPart::ValueParseFail {
+                                        key: #key,
+                                        ty: #ty_str,
+                                        error: e.to_string(),
+                                        offset: i + 1,
+                                    });
+                                },
+                                None => {
+                                    errors.push(_perlxs::error::ToStructErrPart::OmittedValue(#key));
+                                },
+                            }
+                        }
                     }
-                }
-            }
-        }).collect::<Vec<_>>()
-    }).collect();
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect();
 
     // Generate required field checks
-    let required_checks: Vec<_> = fields.iter().filter(|f| !f.optional).map(|f| {
-        let var_name = format_ident!("value_{}", f.ident);
-        let keys: Vec<_> = f.keys.iter().map(|k| quote!(#k)).collect();
-        quote! {
-            if #var_name.is_none() {
-                errors.push(_perlxs::error::ToStructErrPart::OmittedKey(&[#(#keys),*]));
+    let required_checks: Vec<_> = fields
+        .iter()
+        .filter(|f| !f.optional)
+        .map(|f| {
+            let var_name = format_ident!("value_{}", f.ident);
+            let keys: Vec<_> = f.keys.iter().map(|k| quote!(#k)).collect();
+            quote! {
+                if #var_name.is_none() {
+                    errors.push(_perlxs::error::ToStructErrPart::OmittedKey(&[#(#keys),*]));
+                }
             }
-        }
-    }).collect();
+        })
+        .collect();
 
     // Generate struct field initializers
-    let field_inits: Vec<_> = fields.iter().map(|f| {
-        let ident = &f.ident;
-        let var_name = format_ident!("value_{}", f.ident);
-        if f.optional {
-            quote! { #ident: #var_name }
-        } else {
-            quote! { #ident: #var_name.unwrap() }
-        }
-    }).collect();
+    let field_inits: Vec<_> = fields
+        .iter()
+        .map(|f| {
+            let ident = &f.ident;
+            let var_name = format_ident!("value_{}", f.ident);
+            if f.optional {
+                quote! { #ident: #var_name }
+            } else {
+                quote! { #ident: #var_name.unwrap() }
+            }
+        })
+        .collect();
 
     let dummy_const = format_ident!("_IMPL_PERLXS_FROMPERLKV_FOR_{}", name);
 

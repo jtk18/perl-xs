@@ -1,6 +1,6 @@
 extern crate cc;
 
-use std::path::{ PathBuf, Path };
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 struct Perl {
@@ -26,10 +26,7 @@ impl Perl {
     }
 
     fn run(&self, script: &str) {
-        let status = Command::new(&self.bin)
-            .arg(script)
-            .status()
-            .unwrap();
+        let status = Command::new(&self.bin).arg(script).status().unwrap();
         assert!(status.success());
     }
 
@@ -42,7 +39,7 @@ impl Perl {
 fn build(perl: &Perl) {
     let mut cc = cc::Build::new();
 
-    let ccflags = std::env::var("LIBPERL_CCFLAGS").unwrap_or_else(|_e| { perl.cfg("ccflags") });
+    let ccflags = std::env::var("LIBPERL_CCFLAGS").unwrap_or_else(|_e| perl.cfg("ccflags"));
     for flag in ccflags.split_whitespace() {
         cc.flag(flag);
     }

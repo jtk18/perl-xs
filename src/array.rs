@@ -121,16 +121,16 @@ impl AV {
     /// Construct new AV from a raw pointer without incrementing reference counter (raw pointer
     /// already "owns" one incref).
     #[inline]
-    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV { unsafe {
-        AV(Owned::from_raw_owned(pthx, raw))
-    }}
+    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
+        unsafe { AV(Owned::from_raw_owned(pthx, raw)) }
+    }
 
     /// Construct new AV from a raw pointer and increment its reference counter (raw pointer is
     /// "borrowed" from another structure that owns one incref).
     #[inline]
-    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV { unsafe {
-        AV(Owned::from_raw_borrowed(pthx, raw))
-    }}
+    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
+        unsafe { AV(Owned::from_raw_borrowed(pthx, raw)) }
+    }
 
     /// Get an iterator over the array.
     #[inline]
@@ -164,16 +164,15 @@ impl AV {
 
 impl TryFromSV for AV {
     type Error = &'static str;
-    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<AV, Self::Error> { unsafe {
-        if pthx.ouroboros_sv_rok(raw) == 0 {
-            return Err("not an array reference");
-        }
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<AV, Self::Error> {
+        unsafe {
+            if pthx.ouroboros_sv_rok(raw) == 0 {
+                return Err("not an array reference");
+            }
 
-        Ok(AV::from_raw_borrowed(
-            pthx,
-            pthx.ouroboros_sv_rv(raw) as *mut _,
-        ))
-    }}
+            Ok(AV::from_raw_borrowed(pthx, pthx.ouroboros_sv_rv(raw) as *mut _))
+        }
+    }
 }
 
 pub struct IterAV<'a, T> {
