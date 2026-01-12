@@ -208,7 +208,8 @@ jobs:
       - name: Verify manual registration works
         working-directory: t
         run: |
-          # This step MUST succeed - if it fails, bootstrap mechanism is broken
+          # Capture both stdout and stderr to see debug output
+          echo "=== Loading XSTest and checking registration (stderr will show debug output) ==="
           perl -Mblib -e '
             require XSTest;
 
@@ -235,7 +236,17 @@ jobs:
               print "FAIL: XSTest::test_push does NOT exist\n";
               print "The xs! macro is NOT generating working PERL_XS arrays.\n";
             }
-          '
+
+            # List all functions in XSTest namespace
+            print "\n=== All functions in XSTest namespace ===\n";
+            no strict "refs";
+            for my $name (sort keys %XSTest::) {
+              my $glob = $XSTest::{$name};
+              if (defined &{"XSTest::$name"}) {
+                print "  XSTest::$name (function)\n";
+              }
+            }
+          ' 2>&1
 
       - name: Run Perl integration tests
         working-directory: t
