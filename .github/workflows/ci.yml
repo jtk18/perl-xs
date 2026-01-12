@@ -243,12 +243,13 @@ jobs:
               print "First function in stack::PERL_XS: $first\n";
             }
 
-            # Test 3: xs! macro generated function
+            # Test 3: xs! macro generated function - die with debug info if missing
             if (defined &XSTest::test_push) {
               print "SUCCESS: XSTest::test_push exists (xs! macro works!)\n";
             } else {
-              print "FAIL: XSTest::test_push does NOT exist\n";
-              print "The xs! macro is NOT generating working PERL_XS arrays.\n";
+              my $sizes = defined &XSTest::get_perl_xs_sizes ? XSTest::get_perl_xs_sizes() : "unavailable";
+              my $first_fn = defined &XSTest::get_first_stack_fn ? XSTest::get_first_stack_fn() : "unavailable";
+              die "DIAGNOSTIC: test_push missing! PERL_XS_SIZES=[$sizes] FIRST_STACK_FN=[$first_fn]";
             }
 
             # List all functions in XSTest namespace
