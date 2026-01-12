@@ -12,10 +12,10 @@ requires "XSLoader" => 0;
 
 rust_use_perl_xs { path => ".." };
 
-#TODO: Change this to use the crate once published to crates.io
-rust_requires "perl-sys" => { git=>"https://github.com/vickenty/perl-sys" };
-rust_requires "perlxs_derive" => { path => "../perlxs_derive"  };
-rust_requires "cstr" => "0.1";
+# Use local workspace crates
+rust_requires "perl-sys" => { path => "../perl-sys" };
+rust_requires "perlxs_derive" => { path => "../perlxs_derive" };
+rust_requires "cstr" => "0.2";
 rust_write;
 
 WriteAll;
