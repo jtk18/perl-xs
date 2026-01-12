@@ -1,11 +1,4 @@
 //! Roundtrip tests for passing data between Perl and Rust XS.
-//!
-//! Tests for:
-//! - Primitive types (integers, floats, strings)
-//! - References (arrayrefs, hashrefs)
-//! - Complex data structures
-//! - Perl objects
-//! - Coderefs (calling Perl subs from Rust)
 
 use perl_xs::convert::IntoSV;
 use perl_xs::{AV, HV, IV, NV, SV, UV};
@@ -13,84 +6,64 @@ use perl_xs::{AV, HV, IV, NV, SV, UV};
 xs! {
     package XSTest::Roundtrip;
 
-    // ========================================================================
     // INTEGER TESTS
-    // ========================================================================
 
-    /// Return the same IV value (signed integer roundtrip)
     sub roundtrip_iv(ctx, val: IV) {
         val
     }
 
-    /// Return the same UV value (unsigned integer roundtrip)
     sub roundtrip_uv(ctx, val: UV) {
         val
     }
 
-    /// Return the sum of two IVs
     sub add_iv(ctx, a: IV, b: IV) {
         a + b
     }
 
-    /// Return a negative IV
     sub negate_iv(ctx, val: IV) {
         -val
     }
 
-    /// Return IV min/max values for testing boundary conditions
     sub iv_boundaries(ctx) {
         (IV::MIN, IV::MAX, 0 as IV)
     }
 
-    /// Return UV max value
     sub uv_max(ctx) {
         UV::MAX
     }
 
-    // ========================================================================
     // FLOAT TESTS
-    // ========================================================================
 
-    /// Return the same NV value (float roundtrip)
     sub roundtrip_nv(ctx, val: NV) {
         val
     }
 
-    /// Return product of two NVs
     sub multiply_nv(ctx, a: NV, b: NV) {
         a * b
     }
 
-    /// Return special float values
     sub nv_special_values(ctx) {
         (0.0 as NV, -0.0 as NV, NV::INFINITY, NV::NEG_INFINITY)
     }
 
-    /// Return a precise float value (for precision tests)
     sub nv_precision(ctx) {
         3.141592653589793 as NV
     }
 
-    // ========================================================================
     // STRING TESTS
-    // ========================================================================
 
-    /// Return the same string (ASCII roundtrip)
     sub roundtrip_string(ctx, s: String) {
         s
     }
 
-    /// Return the length of a string
     sub string_length(ctx, s: String) {
         s.len() as IV
     }
 
-    /// Return a string with Unicode characters
     sub unicode_string(ctx) {
         "Hello, 世界! 🌍"
     }
 
-    /// Return multiple strings with various content
     sub various_strings(ctx) {
         (
             "ASCII only",
@@ -101,40 +74,30 @@ xs! {
         )
     }
 
-    /// Return an empty string
     sub empty_string(ctx) {
         ""
     }
 
-    /// Return a string with null bytes (via SV)
     sub binary_string(ctx) {
         ctx.new_sv("binary\x00with\x00nulls")
     }
 
-    // ========================================================================
     // BOOLEAN TESTS
-    // ========================================================================
 
-    /// Return the same boolean value
     sub roundtrip_bool(ctx, val: bool) {
         val
     }
 
-    /// Return both boolean values
     sub bool_values(ctx) {
         (true, false)
     }
 
-    // ========================================================================
-    // ARRAYREF TESTS (Creating arrays in Rust, returning to Perl)
-    // ========================================================================
+    // ARRAYREF TESTS
 
-    /// Create and return an empty arrayref
     sub create_empty_array(ctx) {
         ctx.new_av()
     }
 
-    /// Create and return an arrayref with integer elements
     sub create_int_array(ctx) {
         let av = ctx.new_av();
         let perl = ctx.perl();
@@ -146,7 +109,6 @@ xs! {
         av
     }
 
-    /// Create and return an arrayref with mixed elements
     sub create_mixed_array(ctx) {
         let av = ctx.new_av();
         let perl = ctx.perl();
@@ -157,7 +119,6 @@ xs! {
         av
     }
 
-    /// Create a nested arrayref [[1,2], [3,4], [5,6]]
     sub create_nested_array(ctx) {
         let perl = ctx.perl();
 
@@ -181,18 +142,15 @@ xs! {
         outer
     }
 
-    /// Take an arrayref from Perl, sum its elements, return the sum
     sub sum_array(ctx, av: AV) {
         let sum: IV = av.iter().filter_map(|v| v).map(|sv: SV| sv.iv()).sum();
         sum
     }
 
-    /// Take an arrayref and return its length
     sub array_length(ctx, av: AV) {
         av.top_index() + 1
     }
 
-    /// Double each element of an array and return new array
     sub double_array(ctx, av: AV) {
         let perl = ctx.perl();
         let result = ctx.new_av();
@@ -206,16 +164,12 @@ xs! {
         result
     }
 
-    // ========================================================================
-    // HASHREF TESTS (Creating hashes in Rust, returning to Perl)
-    // ========================================================================
+    // HASHREF TESTS
 
-    /// Create and return an empty hashref
     sub create_empty_hash(ctx) {
         ctx.new_hv()
     }
 
-    /// Create and return a hashref with string keys and integer values
     sub create_int_hash(ctx) {
         let hv = ctx.new_hv();
         let perl = ctx.perl();
@@ -225,7 +179,6 @@ xs! {
         hv
     }
 
-    /// Create and return a hashref with mixed values
     sub create_mixed_hash(ctx) {
         let hv = ctx.new_hv();
         let perl = ctx.perl();
@@ -236,7 +189,6 @@ xs! {
         hv
     }
 
-    /// Create a nested hashref { outer => { inner => value } }
     sub create_nested_hash(ctx) {
         let perl = ctx.perl();
 
@@ -251,28 +203,23 @@ xs! {
         outer
     }
 
-    /// Take a hashref from Perl, sum its integer values
     sub sum_hash_values(ctx, hv: HV) {
         let sum: IV = hv.values::<IV>().sum();
         sum
     }
 
-    /// Take a hashref and return the number of keys
     sub hash_key_count(ctx, hv: HV) {
         hv.keys().count() as IV
     }
 
-    /// Fetch a value from hashref by key
     sub hash_fetch(ctx, hv: HV, key: String) {
         hv.fetch::<SV>(&key)
     }
 
-    /// Check if key exists in hashref
     sub hash_exists(ctx, hv: HV, key: String) {
         hv.exists(&key)
     }
 
-    /// Create a hashref with Unicode keys
     sub create_unicode_key_hash(ctx) {
         let hv = ctx.new_hv();
         let perl = ctx.perl();
@@ -282,11 +229,8 @@ xs! {
         hv
     }
 
-    // ========================================================================
     // MIXED DATA STRUCTURE TESTS
-    // ========================================================================
 
-    /// Create array of hashes
     sub create_array_of_hashes(ctx) {
         let perl = ctx.perl();
         let av = ctx.new_av();
@@ -310,7 +254,6 @@ xs! {
         av
     }
 
-    /// Create hash with array values
     sub create_hash_with_arrays(ctx) {
         let perl = ctx.perl();
         let hv = ctx.new_hv();
@@ -331,21 +274,16 @@ xs! {
         hv
     }
 
-    // ========================================================================
     // OPTIONAL/UNDEF TESTS
-    // ========================================================================
 
-    /// Return undef
     sub return_undef(ctx) {
         ctx.sv_undef()
     }
 
-    /// Accept optional IV, return it or default
     sub optional_iv(ctx, val: Option<IV>) {
         val.unwrap_or(-1)
     }
 
-    /// Accept optional string
     sub optional_string(ctx, val: Option<IV>) {
         match val {
             Some(v) => v,
@@ -353,11 +291,8 @@ xs! {
         }
     }
 
-    // ========================================================================
     // TYPE CHECKING TESTS
-    // ========================================================================
 
-    /// Check what type of value was passed
     sub check_sv_type(ctx, sv: SV) {
         (
             sv.ok(),
@@ -369,41 +304,31 @@ xs! {
         )
     }
 
-    /// Check if value is defined
     sub is_defined(ctx, sv: SV) {
         sv.ok()
     }
 
-    // ========================================================================
-    // PERL OBJECT TESTS (using DataRef for Rust data attached to Perl objects)
-    // ========================================================================
+    // PERL OBJECT TESTS
 
-    /// Create a simple counter object (Perl object wrapping Rust data)
     sub counter_new(ctx, class: String, initial: IV) {
         use std::cell::RefCell;
         ctx.new_sv_with_data(RefCell::new(initial)).bless(&class)
     }
 
-    /// Get counter value
     sub counter_get(_ctx, this: perl_xs::DataRef<std::cell::RefCell<IV>>) {
         *this.borrow()
     }
 
-    /// Increment counter
     sub counter_inc(_ctx, this: perl_xs::DataRef<std::cell::RefCell<IV>>, amount: Option<IV>) {
         *this.borrow_mut() += amount.unwrap_or(1);
     }
 
-    /// Decrement counter
     sub counter_dec(_ctx, this: perl_xs::DataRef<std::cell::RefCell<IV>>, amount: Option<IV>) {
         *this.borrow_mut() -= amount.unwrap_or(1);
     }
 
-    // ========================================================================
     // STRESS/EDGE CASE TESTS
-    // ========================================================================
 
-    /// Create a large array
     sub create_large_array(ctx, size: IV) {
         let av = ctx.new_av();
         let perl = ctx.perl();
@@ -413,7 +338,6 @@ xs! {
         av
     }
 
-    /// Create a hash with many keys
     sub create_large_hash(ctx, size: IV) {
         let hv = ctx.new_hv();
         let perl = ctx.perl();
