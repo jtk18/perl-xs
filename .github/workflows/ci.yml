@@ -185,23 +185,21 @@ jobs:
           echo "=== Perl Config ==="
           perl -MConfig -e 'print "usemultiplicity=$Config{usemultiplicity}\n"; print "archname=$Config{archname}\n"'
           echo ""
-          echo "=== Diagnostic Tests ==="
+          echo "=== Minimal Function Test ==="
           perl -Mblib -e '
             require XSTest;
-            if (defined &XSTest::Diagnostic::bootstrap_ran) {
-              print "SUCCESS: XSTest::Diagnostic::bootstrap_ran exists\n";
-              my $result = XSTest::Diagnostic::bootstrap_ran();
-              print "  Result: $result\n";
+            print "Testing if minimal function exists...\n";
+            if (defined &XSTest::Minimal::test) {
+              print "SUCCESS: XSTest::Minimal::test EXISTS!\n";
+              my $result = XSTest::Minimal::test();
+              print "  Result: $result (expected 42)\n";
             } else {
-              print "FAIL: XSTest::Diagnostic::bootstrap_ran does NOT exist\n";
+              print "FAIL: XSTest::Minimal::test does NOT exist\n";
+              print "This means the xs! macro bootstrap is not registering functions.\n";
             }
-            if (defined &XSTest::Diagnostic::function_count) {
-              print "SUCCESS: XSTest::Diagnostic::function_count exists\n";
-              my $count = XSTest::Diagnostic::function_count();
-              print "  Total PERL_XS entries: $count\n";
-            } else {
-              print "FAIL: XSTest::Diagnostic::function_count does NOT exist\n";
-            }
+            print "\nChecking other namespaces:\n";
+            print "XSTest::test_push: ", (defined &XSTest::test_push ? "exists" : "MISSING"), "\n";
+            print "XSTest::Hash::test_store: ", (defined &{"XSTest::Hash::test_store"} ? "exists" : "MISSING"), "\n";
           '
 
       - name: Run Perl integration tests

@@ -17,32 +17,20 @@ mod data;
 mod derive;
 mod roundtrip;
 
-// Diagnostic module to verify bootstrap works
-mod diagnostic {
+// Minimal test module - if this one function gets registered, bootstrap works
+mod minimal {
     xs! {
-        package XSTest::Diagnostic;
+        package XSTest::Minimal;
 
-        sub bootstrap_ran(ctx) {
-            1 as perl_xs::IV
-        }
-
-        sub function_count(ctx) {
-            let count = super::stack::PERL_XS.len() +
-                        super::scalar::PERL_XS.len() +
-                        super::array::PERL_XS.len() +
-                        super::hash::PERL_XS.len() +
-                        super::panic::PERL_XS.len() +
-                        super::param::PERL_XS.len() +
-                        super::data::PERL_XS.len() +
-                        super::derive::PERL_XS.len() +
-                        super::roundtrip::PERL_XS.len();
-            count as perl_xs::IV
+        sub test(ctx) {
+            42 as perl_xs::IV
         }
     }
 }
 
 xs! {
     bootstrap boot_XSTest;
+    use minimal;
     use stack;
     use scalar;
     use array;
@@ -52,5 +40,4 @@ xs! {
     use data;
     use derive;
     use roundtrip;
-    use diagnostic;
 }
