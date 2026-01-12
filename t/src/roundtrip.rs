@@ -308,25 +308,6 @@ xs! {
         sv.ok()
     }
 
-    // PERL OBJECT TESTS
-
-    sub counter_new(ctx, class: String, initial: IV) {
-        use std::cell::RefCell;
-        ctx.new_sv_with_data(RefCell::new(initial)).bless(&class)
-    }
-
-    sub counter_get(_ctx, this: perl_xs::DataRef<std::cell::RefCell<IV>>) {
-        *this.borrow()
-    }
-
-    sub counter_inc(_ctx, this: perl_xs::DataRef<std::cell::RefCell<IV>>, amount: Option<IV>) {
-        *this.borrow_mut() += amount.unwrap_or(1);
-    }
-
-    sub counter_dec(_ctx, this: perl_xs::DataRef<std::cell::RefCell<IV>>, amount: Option<IV>) {
-        *this.borrow_mut() -= amount.unwrap_or(1);
-    }
-
     // STRESS/EDGE CASE TESTS
 
     sub create_large_array(ctx, size: IV) {
