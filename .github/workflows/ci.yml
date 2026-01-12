@@ -43,7 +43,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ matrix.perl }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-v2-${{ matrix.rust }}-${{ matrix.perl }}-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
 
       - name: Show versions
         run: |
@@ -98,7 +98,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-perl-integration-${{ matrix.perl }}-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
+          key: ${{ runner.os }}-perl-v2-${{ matrix.perl }}-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
 
       - name: Install Perl test dependencies
         run: |
@@ -212,7 +212,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-features-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
+          key: ${{ runner.os }}-feat-v2-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
 
       - name: Install Perl test dependencies
         run: |
@@ -293,7 +293,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-leaks-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
+          key: ${{ runner.os }}-leaks-v2-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
 
       - name: Install Perl test dependencies
         run: |
