@@ -383,6 +383,36 @@ from_sv_for_option! {
     ouroboros_sv_nv, NV;
 }
 
+/// Return `Some(v)` if scalar value is defined, `None` otherwise.
+impl FromSV for Option<bool> {
+    #[inline]
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Option<bool> {
+        unsafe {
+            if pthx.ouroboros_sv_ok(raw) != 0 {
+                Some(pthx.ouroboros_sv_true(raw) != 0)
+            } else {
+                None
+            }
+        }
+    }
+}
+
+/// Return `Some(v)` if scalar value is defined, `None` otherwise.
+impl TryFromSV for Option<String> {
+    type Error = std::str::Utf8Error;
+
+    #[inline]
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<Option<String>, Self::Error> {
+        unsafe {
+            if pthx.ouroboros_sv_ok(raw) != 0 {
+                String::try_from_sv(pthx, raw).map(Some)
+            } else {
+                Ok(None)
+            }
+        }
+    }
+}
+
 impl TryFromSV for String {
     type Error = std::str::Utf8Error;
 

@@ -89,7 +89,7 @@ macro_rules! xs {
         $( use $( $name:ident )::+ ; )*
     ) => (
         pthx! {
-            #[no_mangle]
+            #[unsafe(no_mangle)]
             #[allow(non_snake_case)]
             fn $boot (pthx, _cv: *mut $crate::raw::CV) {
                 let perl = $crate::raw::initialize(pthx);
