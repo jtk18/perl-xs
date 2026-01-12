@@ -184,6 +184,25 @@ jobs:
           echo ""
           echo "=== Perl Config ==="
           perl -MConfig -e 'print "usemultiplicity=$Config{usemultiplicity}\n"; print "archname=$Config{archname}\n"'
+          echo ""
+          echo "=== Diagnostic Tests ==="
+          perl -Mblib -e '
+            require XSTest;
+            if (defined &XSTest::Diagnostic::bootstrap_ran) {
+              print "SUCCESS: XSTest::Diagnostic::bootstrap_ran exists\n";
+              my $result = XSTest::Diagnostic::bootstrap_ran();
+              print "  Result: $result\n";
+            } else {
+              print "FAIL: XSTest::Diagnostic::bootstrap_ran does NOT exist\n";
+            }
+            if (defined &XSTest::Diagnostic::function_count) {
+              print "SUCCESS: XSTest::Diagnostic::function_count exists\n";
+              my $count = XSTest::Diagnostic::function_count();
+              print "  Total PERL_XS entries: $count\n";
+            } else {
+              print "FAIL: XSTest::Diagnostic::function_count does NOT exist\n";
+            }
+          '
 
       - name: Run Perl integration tests
         working-directory: t
