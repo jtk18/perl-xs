@@ -98,8 +98,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-            t/target/
-          key: ${{ runner.os }}-perl-integration-${{ matrix.perl }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-perl-integration-${{ matrix.perl }}-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
 
       - name: Install Perl test dependencies
         run: |
@@ -124,6 +123,7 @@ jobs:
       - name: Build XSTest module
         working-directory: t
         run: |
+          rm -rf target blib Makefile 2>/dev/null || true
           perl Makefile.PL
           echo "=== Generated Cargo.toml ==="
           cat Cargo.toml || echo "No Cargo.toml found"
