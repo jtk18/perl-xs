@@ -29,7 +29,7 @@ jobs:
           perl-version: ${{ matrix.perl }}
 
       - name: Install Rust ${{ matrix.rust }}
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
           components: clippy, rustfmt
@@ -85,7 +85,7 @@ jobs:
           perl-version: ${{ matrix.perl }}
 
       - name: Install Rust stable
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
 
@@ -166,7 +166,7 @@ jobs:
           perl-version: '5.38'
 
       - name: Install Rust stable
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
 
@@ -242,7 +242,7 @@ jobs:
           perl-version: '5.38'
 
       - name: Install Rust 1.85 (MSRV for edition 2024)
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.85'
 
@@ -265,7 +265,7 @@ jobs:
           perl-version: '5.38'
 
       - name: Install Rust stable
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
 
