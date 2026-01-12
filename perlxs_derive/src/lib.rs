@@ -114,13 +114,23 @@ fn impl_from_kv(input: &DeriveInput) -> TokenStream2 {
     };
 
     // Generate variable declarations
+    // For optional fields (Option<T>), we use Option<T> directly
+    // For required fields, we use Option<T> to track if it was set
     let var_decls: Vec<_> = fields
         .iter()
         .map(|f| {
             let var_name = format_ident!("value_{}", f.ident);
             let ty = &f.ty;
-            quote! {
-                let mut #var_name: Option<#ty> = None
+            if f.optional {
+                // Field is already Option<T>, so just use that type
+                quote! {
+                    let mut #var_name: #ty = None
+                }
+            } else {
+                // Wrap in Option to track if it was set
+                quote! {
+                    let mut #var_name: Option<#ty> = None
+                }
             }
         })
         .collect();
@@ -132,15 +142,23 @@ fn impl_from_kv(input: &DeriveInput) -> TokenStream2 {
             let var_name = format_ident!("value_{}", f.ident);
             let ty = &f.ty;
             let ty_str = quote!(#ty).to_string();
+            let is_optional = f.optional;
 
             f.keys
                 .iter()
-                .map(|key| {
+                .map(move |key| {
+                    // For optional fields, assign the value directly (it's already Option<T>)
+                    // For required fields, wrap in Some() to track that it was set
+                    let assign = if is_optional {
+                        quote! { #var_name = v; }
+                    } else {
+                        quote! { #var_name = Some(v); }
+                    };
                     quote! {
                         #key => {
                             match ctx.st_try_fetch::<#ty>(i + 1) {
                                 Some(Ok(v)) => {
-                                    #var_name = Some(v);
+                                    #assign
                                 },
                                 Some(Err(e)) => {
                                     errors.push(_perlxs::error::ToStructErrPart::ValueParseFail {
