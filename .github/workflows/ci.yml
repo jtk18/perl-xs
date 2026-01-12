@@ -89,16 +89,17 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-perl-v2-${{ matrix.perl }}-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
+      # Temporarily disable cache to debug build issues
+      # - name: Cache cargo
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ~/.cargo/bin/
+      #       ~/.cargo/registry/index/
+      #       ~/.cargo/registry/cache/
+      #       ~/.cargo/git/db/
+      #       target/
+      #     key: ${{ runner.os }}-perl-v2-${{ matrix.perl }}-${{ hashFiles('**/Cargo.lock', 'src/**', 't/src/**') }}
 
       - name: Install Perl test dependencies
         run: |
@@ -123,14 +124,12 @@ jobs:
       - name: Build XSTest module
         working-directory: t
         run: |
-          rm -rf target blib Makefile 2>/dev/null || true
+          rm -rf target blib Makefile Cargo.toml 2>/dev/null || true
           perl Makefile.PL
           echo "=== Generated Cargo.toml ==="
-          cat Cargo.toml || echo "No Cargo.toml found"
-          echo "=== Building with cargo directly first ==="
-          cargo build --release 2>&1 | tail -50
-          echo "=== Now building with make ==="
-          make VERBOSE=1 2>&1 | tail -100
+          cat Cargo.toml
+          echo "=== Building ==="
+          make VERBOSE=1
 
       - name: Debug - Check built files
         working-directory: t
