@@ -1,7 +1,7 @@
 inc
 target
 Cargo.lock
-Cargo.toml
+Cargo.toml.static
 MYMETA.*
 META.*
 Makefile

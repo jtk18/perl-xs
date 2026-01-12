@@ -124,12 +124,18 @@ jobs:
         working-directory: t
         run: |
           rm -rf target blib Makefile 2>/dev/null || true
+          echo "=== Saving static Cargo.toml ==="
+          cp Cargo.toml Cargo.toml.static
+          echo "=== Running perl Makefile.PL ==="
           perl Makefile.PL
-          echo "=== Generated Cargo.toml ==="
-          cat Cargo.toml || echo "No Cargo.toml found"
-          echo "=== Building with cargo directly first ==="
+          echo "=== Generated Cargo.toml from Makefile.PL ==="
+          cat Cargo.toml
+          echo "=== Restoring static Cargo.toml with edition 2024 ==="
+          cp Cargo.toml.static Cargo.toml
+          cat Cargo.toml
+          echo "=== Building with cargo ==="
           cargo build --release 2>&1 | tail -50
-          echo "=== Now building with make ==="
+          echo "=== Building with make ==="
           make VERBOSE=1 2>&1 | tail -100
 
       - name: Debug - Check built files
