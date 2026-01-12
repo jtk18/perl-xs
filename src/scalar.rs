@@ -338,21 +338,21 @@ impl Clone for SV {
 impl FromSV for IV {
     #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> IV {
-        pthx.sv_iv(raw)
+        pthx.ouroboros_sv_iv(raw)
     }
 }
 
 impl FromSV for UV {
     #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> UV {
-        pthx.sv_uv(raw)
+        pthx.ouroboros_sv_uv(raw)
     }
 }
 
 impl FromSV for NV {
     #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> NV {
-        pthx.sv_nv(raw)
+        pthx.ouroboros_sv_nv(raw)
     }
 }
 
@@ -380,9 +380,9 @@ macro_rules! from_sv_for_option {
 }
 
 from_sv_for_option! {
-    sv_iv, IV;
-    sv_uv, UV;
-    sv_nv, NV;
+    ouroboros_sv_iv, IV;
+    ouroboros_sv_uv, UV;
+    ouroboros_sv_nv, NV;
 }
 
 impl TryFromSV for String {
@@ -435,7 +435,7 @@ impl IntoSV for bool {
 impl FromSV for bool {
     #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> bool {
-        pthx.sv_true(raw) != 0
+        pthx.ouroboros_sv_true(raw) != 0
     }
 }
 

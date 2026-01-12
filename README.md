@@ -1,8 +1,6 @@
-[![Build Status](https://travis-ci.org/vickenty/perl-xs.svg?branch=master)](https://travis-ci.org/vickenty/perl-xs)
-
 # Perl XS for Rust
 
-High-level Rust bindings to Perl XS API.
+High-level Rust bindings to Perl XS API, allowing you to write Perl extensions in Rust.
 
 ## Example
 
@@ -17,50 +15,144 @@ xs! {
 
 For a more complete example see the XSTest package in the `t/` directory.
 
+## Features
+
+- **Safe abstractions** over Perl's low-level XS API
+- **Automatic memory management** with proper reference counting
+- **Type conversions** between Perl and Rust types
+- **Derive macros** for easy struct serialization from Perl hashes
+- **Exception handling** that bridges Perl and Rust
+
 ## Goals
 
-- safety
-- correctness
-- speed
+- Safety
+- Correctness
+- Speed
 
-Perl XS API is deliberately low-level and requires user to maintain a
-good deal of internal invariants, thus allowing for very fast
-code. This package takes a different approach of encapsulating
-implementation details to provide a simpler and safer API at the cost
-of speed.
-
-For now, this library focuses on Perl's public documented API, which
-is a small subset of what is available to authors of modules written
-in C.
-
-## Work in progress
-
-This project is very much in progress. It is not yet clear if project
-goals are attainable at all or if the API will make any sense in
-practice.
-
-## How to use
-
-`Module::Install::Rust` integrates traditional Perl build system with
-Cargo, allowing Rust code to be compiled and installed using familiar
-`perl Makefile.PL && make` process. For example, see test package
-under `t` directory.
+Perl XS API is deliberately low-level and requires users to maintain
+internal invariants, allowing for very fast code. This package takes a
+different approach of encapsulating implementation details to provide a
+simpler and safer API.
 
 ## Prerequisites
 
-- Perl 5.20+ (for 64-bit array methods)
-- Rust 1.31+
+- Perl 5.20+ (tested with 5.38)
+- Rust 1.70+
 
-## Testing
+## Quick Start
 
-To install packages required for testing and benchmarking:
-
-```shell
-cpanm --installdeps .
-```
-
-To run tests:
+### Building
 
 ```shell
-(cd t && perl Makefile.PL && make test)
+# Build the workspace
+cargo build --workspace
+
+# Run tests
+cargo test --workspace --lib
 ```
+
+### Using Taskfile (Optional)
+
+If you have [Task](https://taskfile.dev) installed:
+
+```shell
+# Show available commands
+task
+
+# Build
+task build
+
+# Run tests
+task test
+
+# Check formatting and lint
+task ci
+```
+
+## Project Structure
+
+```
+perl-xs/
+├── src/           # Main perl-xs crate (high-level bindings)
+├── perl-sys/      # Low-level Perl FFI bindings (auto-generated)
+├── perlxs_derive/ # Procedural macros (#[derive(FromPerlKV)])
+└── t/             # Perl integration tests
+```
+
+## Creating a Perl Module with Rust
+
+1. Add `perl-xs` and `perlxs_derive` to your `Cargo.toml`:
+
+```toml
+[dependencies]
+perl-xs = "0.2"
+perlxs_derive = "0.2"
+```
+
+2. Write your XS module:
+
+```rust
+#[macro_use]
+extern crate perl_xs;
+#[macro_use]
+extern crate perl_sys;
+
+use perl_xs::{IV, NV, SV, AV, HV};
+
+xs! {
+    package MyModule;
+
+    sub add(ctx, a: IV, b: IV) {
+        a + b
+    }
+
+    sub greet(ctx, name: String) {
+        format!("Hello, {}!", name)
+    }
+}
+```
+
+3. Use `Module::Install::Rust` to integrate with Perl's build system.
+
+## Derive Macros
+
+The `perlxs_derive` crate provides `#[derive(FromPerlKV)]` for automatically
+converting Perl hashes to Rust structs:
+
+```rust
+use perlxs_derive::FromPerlKV;
+
+#[derive(FromPerlKV)]
+struct Config {
+    #[perlxs(key = "host_name")]
+    hostname: String,
+    port: u16,
+    #[perlxs(key = "timeout_seconds")]
+    timeout: Option<u32>,
+}
+```
+
+## Testing Perl Integration
+
+The `t/` directory contains Perl integration tests. To run them, you'll need:
+
+```shell
+# Install Perl test dependencies
+cpanm Module::Install Module::Install::Rust Test::LeakTrace Test::More Test::Fatal
+
+# Run Perl tests
+cd t && perl Makefile.PL && make test
+```
+
+## License
+
+BSD-2-Clause
+
+## Contributing
+
+Contributions are welcome! This project aims to make Rust a first-class
+citizen for writing Perl extensions.
+
+## Acknowledgments
+
+Originally created by [Vickenty Fesunov](https://github.com/vickenty).

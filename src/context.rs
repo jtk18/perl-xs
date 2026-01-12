@@ -4,6 +4,7 @@ use crate::convert::{FromSV, IntoSV, TryFromSV};
 use crate::raw;
 use std;
 use std::ffi::CStr;
+use std::mem::MaybeUninit;
 
 /// XS call context.
 pub struct Context {
@@ -40,12 +41,13 @@ impl Context {
     {
         unsafe {
             raw::catch_unwind(perl, || {
-                let mut ctx = Context {
-                    perl: perl,
-                    stack: std::mem::uninitialized(),
-                };
+                let mut stack: MaybeUninit<raw::Stack> = MaybeUninit::uninit();
+                perl.ouroboros_stack_init(stack.as_mut_ptr());
 
-                perl.ouroboros_stack_init(&mut ctx.stack);
+                let mut ctx = Context {
+                    perl,
+                    stack: stack.assume_init(),
+                };
 
                 let value = f(&mut ctx);
 

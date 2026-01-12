@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use std::mem;
+use std::mem::MaybeUninit;
 use std::slice::from_raw_parts;
 
 use crate::SV;
@@ -107,19 +107,19 @@ impl HV {
 
     /// Get an iterator over the hash.
     #[inline]
-    pub fn iter<T: FromSV>(&self) -> Iter<T> {
+    pub fn iter<T: FromSV>(&self) -> Iter<'_, T> {
         Iter::new(self)
     }
 
     /// Get an iterator over the hash values.
     #[inline]
-    pub fn values<T: FromSV>(&self) -> Values<T> {
+    pub fn values<T: FromSV>(&self) -> Values<'_, T> {
         Values::new(self)
     }
 
     /// Get an iterator over the hash keys.
     #[inline]
-    pub fn keys(&self) -> Keys {
+    pub fn keys(&self) -> Keys<'_> {
         Keys::new(self)
     }
 }
@@ -162,17 +162,17 @@ impl<'a, T: FromSV> Iterator for Iter<'a, T> {
             let pthx = self.hv.pthx();
             let hv_ptr = self.hv.as_ptr();
 
-            let mut k_ptr: *mut i8 = mem::uninitialized();
-            let mut klen: raw::I32 = mem::uninitialized();
+            let mut k_ptr: MaybeUninit<*mut i8> = MaybeUninit::uninit();
+            let mut klen: MaybeUninit<raw::I32> = MaybeUninit::uninit();
             let v = pthx.hv_iternextsv(
                 hv_ptr,
-                &mut k_ptr as *mut _,
-                &mut klen as *mut _,
+                k_ptr.as_mut_ptr(),
+                klen.as_mut_ptr(),
             );
             if v.is_null() {
                 None
             } else {
-                let k = from_raw_parts(k_ptr as *const u8, klen as usize);
+                let k = from_raw_parts(k_ptr.assume_init() as *const u8, klen.assume_init() as usize);
                 Some((k, T::from_sv(pthx, v)))
             }
         }
@@ -234,9 +234,9 @@ impl<'a> Iterator for Keys<'a> {
             if he.is_null() {
                 None
             } else {
-                let mut klen: raw::I32 = mem::uninitialized();
-                let k_ptr = pthx.hv_iterkey(he, &mut klen as *mut _) as *const u8;
-                let k = from_raw_parts(k_ptr, klen as usize);
+                let mut klen: MaybeUninit<raw::I32> = MaybeUninit::uninit();
+                let k_ptr = pthx.hv_iterkey(he, klen.as_mut_ptr()) as *const u8;
+                let k = from_raw_parts(k_ptr, klen.assume_init() as usize);
                 Some(k)
             }
         }

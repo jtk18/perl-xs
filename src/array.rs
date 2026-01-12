@@ -133,7 +133,7 @@ impl AV {
 
     /// Get an iterator over the array.
     #[inline]
-    pub fn iter<T: FromSV>(&self) -> IterAV<T> {
+    pub fn iter<T: FromSV>(&self) -> IterAV<'_, T> {
         IterAV::new(self)
     }
 }

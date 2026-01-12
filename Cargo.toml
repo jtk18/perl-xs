@@ -1,9 +1,17 @@
 [package]
 name = "perl-xs"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Vickenty Fesunov <kent@setattr.net>"]
 license = "BSD-2-Clause"
-edition = "2018"
+edition = "2021"
+rust-version = "1.70"
+description = "High-level Rust bindings to Perl XS API"
+repository = "https://github.com/vickenty/perl-xs"
+keywords = ["perl", "xs", "ffi", "bindings"]
+categories = ["api-bindings", "development-tools::ffi"]
 
 [dependencies]
-perl-sys = { git="https://github.com/vickenty/perl-sys" }
+perl-sys = { path = "perl-sys" }
+
+[workspace]
+members = ["perl-sys", "perlxs_derive"]
