@@ -424,20 +424,21 @@ jobs:
       - name: Run leak tests
         working-directory: t
         run: |
-          # Run tests that use Test::LeakTrace (skipping known problematic tests)
-          # Known pre-existing failures: array.t, data.t, panic.t, scalar-flags.t, scalar-unicode.t
-          SKIP_TESTS="array.t data.t panic.t scalar-flags.t scalar-unicode.t"
+          # Run all tests that use Test::LeakTrace
+          FAILED=0
           for test in t/*.t; do
-            testname=$(basename "$test")
-            if echo "$SKIP_TESTS" | grep -qw "$testname"; then
-              echo "=== Skipping $test (known pre-existing issues) ==="
-              continue
-            fi
             if grep -q "Test::LeakTrace" "$test"; then
               echo "=== Running leak tests in $test ==="
-              perl -Mblib "$test"
+              if ! perl -Mblib "$test"; then
+                echo "FAILED: $test"
+                FAILED=1
+              fi
             fi
           done
+          if [ $FAILED -eq 1 ]; then
+            echo "Some leak tests failed - see output above"
+            exit 1
+          fi
 
   # ==========================================================================
   # Summary job for branch protection
