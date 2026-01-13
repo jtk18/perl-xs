@@ -198,8 +198,11 @@ impl Context {
     }
 
     /// Return an undefined SV.
+    ///
+    /// Creates a new undef SV instead of returning the immortal PL_sv_undef
+    /// to avoid issues with stack mortalization (mXPUSHs).
     pub fn sv_undef(&mut self) -> SV {
-        unsafe { SV::from_raw_owned(self.perl, self.perl.ouroboros_sv_undef()) }
+        unsafe { SV::from_raw_owned(self.perl, self.perl.newSV(0)) }
     }
 
     // ARRAYS AND HASHES

@@ -282,16 +282,9 @@ jobs:
       - name: Run Perl integration tests
         working-directory: t
         run: |
-          # Run tests that are known to pass
-          # Pre-existing failures: scalar-flags.t, scalar-unicode.t, array.t (1), data.t (1), panic.t
-          echo "=== Running working tests ==="
-          prove -b -v t/context-stack-push.t t/hash.t t/param.t t/scalar-new.t t/roundtrip.t t/derive.t
-
-          echo ""
-          echo "=== Running tests with known pre-existing failures ==="
-          # These tests have pre-existing failures due to Ouroboros/Perl version compatibility issues
-          # Run them but don't fail CI on them
-          prove -b -v t/array.t t/data.t t/panic.t t/scalar-flags.t t/scalar-unicode.t || echo "Known pre-existing failures - see README for details"
+          # Run all Perl integration tests
+          echo "=== Running all integration tests ==="
+          prove -b -v t/*.t
 
       - name: Run individual test files with verbose output
         working-directory: t
@@ -440,31 +433,14 @@ jobs:
       - name: Run leak tests
         working-directory: t
         run: |
-          # Tests with known pre-existing failures (same as perl-integration job)
-          KNOWN_FAILURES="array.t data.t panic.t scalar-flags.t"
-
-          FAILED=0
+          # Run all tests that use Test::LeakTrace
           for test in t/*.t; do
             if grep -q "Test::LeakTrace" "$test"; then
-              testname=$(basename "$test")
               echo "=== Running leak tests in $test ==="
-
-              if ! perl -Mblib "$test"; then
-                if echo "$KNOWN_FAILURES" | grep -qw "$testname"; then
-                  echo "KNOWN FAILURE: $test (pre-existing issue)"
-                else
-                  echo "UNEXPECTED FAILURE: $test"
-                  FAILED=1
-                fi
-              fi
+              perl -Mblib "$test"
             fi
           done
-
-          if [ $FAILED -eq 1 ]; then
-            echo "Some leak tests had unexpected failures - see output above"
-            exit 1
-          fi
-          echo "All leak tests passed (known failures are expected)"
+          echo "All leak tests passed"
 
   # ==========================================================================
   # Summary job for branch protection

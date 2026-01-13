@@ -451,10 +451,11 @@ impl IntoSV for NV {
 impl IntoSV for bool {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        unsafe {
-            let raw = if self { pthx.ouroboros_sv_yes() } else { pthx.ouroboros_sv_no() };
-            SV::from_raw_owned(pthx, raw)
-        }
+        // Create a new SV with the boolean value as an integer (0 or 1).
+        // We don't use PL_sv_yes/PL_sv_no because those are immortal values
+        // that don't work correctly when pushed to the stack with mXPUSHs
+        // (which mortalizes the SV).
+        unsafe { SV::from_raw_owned(pthx, pthx.newSViv(if self { 1 } else { 0 })) }
     }
 }
 

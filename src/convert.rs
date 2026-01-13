@@ -25,7 +25,9 @@ where
     fn into_sv(self, perl: raw::Interpreter) -> SV {
         match self {
             Some(inner) => inner.into_sv(perl),
-            None => unsafe { SV::from_raw_owned(perl, perl.ouroboros_sv_undef()) },
+            // Create a new undef SV instead of using the immortal PL_sv_undef
+            // to avoid issues with mXPUSHs mortalization
+            None => unsafe { SV::from_raw_owned(perl, perl.newSV(0)) },
         }
     }
 }
