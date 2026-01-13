@@ -70,6 +70,8 @@ use constant {
     NO_CATCH => {
         "ouroboros_xcpt_try" => "captures perl croaks itself",
         "ouroboros_xcpt_rethrow" => "has to be able to die",
+        "ouroboros_xcpt_rethrow_with_restore" => "has to be able to die",
+        "ouroboros_stack_init" => "needs to save caller's JMPENV, not wrapper's",
         "croak" => "has to be able to die",
         "croak_sv" => "has to be able to die",
         "croak_no_modify" => "has to be able to die",
@@ -285,6 +287,8 @@ sub xcpt_wrapper {
         );
         @jmpenv_pop = (
             "JMPENV_POP;",
+            # Save ERRSV when exception is caught, for proper rethrow later
+            "if (rc != 0) { ouroboros_xcpt_save_errsv(aTHX); }",
         );
     }
 

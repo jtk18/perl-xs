@@ -130,7 +130,10 @@ void ouroboros_freetmps(pTHX);
 
 /* Exception handling */
 int ouroboros_xcpt_try(pTHX_ ouroboros_xcpt_callback_t cb, void* arg);
+void ouroboros_xcpt_save_errsv(pTHX);
+SV* ouroboros_xcpt_get_saved_errsv(pTHX);
 void ouroboros_xcpt_rethrow(pTHX);
+void ouroboros_xcpt_rethrow_with_restore(pTHX);
 
 /* Context */
 U8 ouroboros_gimme(pTHX);

@@ -4,6 +4,10 @@
  * Provides XS macro wrappers as C functions.
  */
 
+/* Thread-local storage for exception handling */
+static __thread SV* saved_errsv = NULL;
+static __thread JMPENV* saved_top_env = NULL;
+
 /* Stack management */
 
 void ouroboros_stack_init(pTHX_ ouroboros_stack_t* stack) {
@@ -11,10 +15,14 @@ void ouroboros_stack_init(pTHX_ ouroboros_stack_t* stack) {
     dMARK;
     dAX;
     dITEMS;
+
     stack->sp = SP;
     stack->ax = ax;
     stack->items = items;
     stack->mark = TOPMARK;
+
+    /* Save PL_top_env at XS function entry for exception rethrowing */
+    saved_top_env = PL_top_env;
 }
 
 void ouroboros_stack_prepush_return(pTHX_ ouroboros_stack_t* stack) {
@@ -375,6 +383,19 @@ void ouroboros_freetmps(pTHX) {
     FREETMPS;
 }
 
+/* Debug helper */
+void ouroboros_debug_jmpenv(pTHX_ const char* label) {
+    fprintf(stderr, "DEBUG [%s]: PL_top_env=%p", label, (void*)PL_top_env);
+    if (PL_top_env) {
+        fprintf(stderr, ", je_ret=%d", PL_top_env->je_ret);
+    }
+    fprintf(stderr, "\n");
+}
+
+int ouroboros_jmpenv_je_ret(pTHX) {
+    return PL_top_env ? PL_top_env->je_ret : -1;
+}
+
 /* Exception handling */
 
 int ouroboros_xcpt_try(pTHX_ ouroboros_xcpt_callback_t cb, void* arg) {
@@ -390,8 +411,66 @@ int ouroboros_xcpt_try(pTHX_ ouroboros_xcpt_callback_t cb, void* arg) {
     return rc;
 }
 
-void ouroboros_xcpt_rethrow(pTHX) {
+/* Save the current ERRSV for later rethrowing */
+void ouroboros_xcpt_save_errsv(pTHX) {
+    if (saved_errsv) {
+        SvREFCNT_dec(saved_errsv);
+    }
+    /* Create a copy of ERRSV that will survive stack unwinding */
+    saved_errsv = newSVsv(ERRSV);
+}
+
+/* Get the saved error message for rethrowing from Rust side.
+ * This avoids the JMPENV corruption issue by letting Rust call croak_sv directly.
+ * Returns the saved error SV (caller takes ownership), or NULL if none saved. */
+SV* ouroboros_xcpt_get_saved_errsv(pTHX) {
+    SV* err = saved_errsv;
+    saved_errsv = NULL;
+    saved_top_env = NULL;
+    return err;
+}
+
+/* Rethrow a saved exception with proper JMPENV restoration.
+ * This restores PL_top_env to the state it was in when stack_init was called,
+ * ensuring the exception is caught by the correct eval/try block.
+ * This function never returns. */
+void ouroboros_xcpt_rethrow_with_restore(pTHX) {
+    SV* err;
+    JMPENV* restore_env = saved_top_env;
+
+    if (saved_errsv) {
+        err = saved_errsv;
+        saved_errsv = NULL;
+    } else {
+        err = newSVsv(ERRSV);
+    }
+    saved_top_env = NULL;
+
+    /* Restore PL_top_env to the state at XS function entry. */
+    if (restore_env != NULL && restore_env->je_ret != -1) {
+        PL_top_env = restore_env;
+    }
+
+    /* Set ERRSV to our saved error */
+    sv_setsv(ERRSV, err);
+    SvREFCNT_dec(err);
+
+    /* Use croak_sv to rethrow the exception */
     croak_sv(ERRSV);
+}
+
+void ouroboros_xcpt_rethrow(pTHX) {
+    SV* err;
+
+    if (saved_errsv) {
+        err = saved_errsv;
+        saved_errsv = NULL;
+    } else {
+        /* Fallback to ERRSV if nothing was saved */
+        err = newSVsv(ERRSV);
+    }
+    saved_top_env = NULL;
+    croak_sv(err);
 }
 
 /* Context */

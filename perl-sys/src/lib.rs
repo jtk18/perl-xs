@@ -46,8 +46,10 @@ fn panic_with_code(code: c_int) -> ! {
 pub unsafe fn try_rethrow(perl: Perl, err: Box<dyn Any>) -> Box<dyn Any> {
     if let Some(&Carrier(_code)) = err.downcast_ref() {
         mem::drop(err);
+        // Use the new rethrow function that restores PL_top_env before calling croak_sv.
+        // This ensures the exception is caught by the correct eval/try block.
         // Rust 2024: explicit unsafe block required
-        unsafe { perl.ouroboros_xcpt_rethrow() };
+        unsafe { perl.ouroboros_xcpt_rethrow_with_restore() };
         unreachable!();
     }
     err

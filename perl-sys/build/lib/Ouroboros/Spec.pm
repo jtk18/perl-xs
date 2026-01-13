@@ -114,7 +114,9 @@ our %SPEC = (
 
         # Exception handling
         { name => "ouroboros_xcpt_try", type => "int", params => ["ouroboros_xcpt_callback_t", "void*"], tags => { no_pthx => 0 } },
+        { name => "ouroboros_xcpt_get_saved_errsv", type => "SV*", params => [], tags => {} },
         { name => "ouroboros_xcpt_rethrow", type => "void", params => [], tags => {} },
+        { name => "ouroboros_xcpt_rethrow_with_restore", type => "void", params => [], tags => {} },
 
         # Context
         { name => "ouroboros_gimme", type => "U8", params => [], tags => {} },
