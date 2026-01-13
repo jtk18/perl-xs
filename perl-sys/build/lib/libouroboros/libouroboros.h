@@ -28,6 +28,7 @@ typedef int (*ouroboros_xcpt_callback_t)(pTHX_ void* arg);
 
 /* Stack management functions */
 void ouroboros_stack_init(pTHX_ ouroboros_stack_t* stack);
+void ouroboros_stack_prepush_return(pTHX_ ouroboros_stack_t* stack);
 int ouroboros_stack_items(pTHX_ ouroboros_stack_t* stack);
 void ouroboros_stack_putback(pTHX_ ouroboros_stack_t* stack);
 SV* ouroboros_stack_fetch(pTHX_ ouroboros_stack_t* stack, SSize_t idx);

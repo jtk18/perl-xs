@@ -451,11 +451,15 @@ impl IntoSV for NV {
 impl IntoSV for bool {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        // Create a new SV with the boolean value as an integer (0 or 1).
-        // We don't use PL_sv_yes/PL_sv_no because those are immortal values
-        // that don't work correctly when pushed to the stack with mXPUSHs
-        // (which mortalizes the SV).
-        unsafe { SV::from_raw_owned(pthx, pthx.newSViv(if self { 1 } else { 0 })) }
+        // Create a copy of PL_sv_yes or PL_sv_no using newSVsv.
+        // We can't use the immortal values directly because they don't work
+        // correctly when pushed to the stack with mXPUSHs (which mortalizes).
+        // Using newSVsv creates an owned copy with proper Perl boolean semantics
+        // (PL_sv_no stringifies to "" while newSViv(0) stringifies to "0").
+        unsafe {
+            let immortal = if self { pthx.ouroboros_sv_yes() } else { pthx.ouroboros_sv_no() };
+            SV::from_raw_owned(pthx, pthx.newSVsv(immortal))
+        }
     }
 }
 

@@ -17,6 +17,13 @@ void ouroboros_stack_init(pTHX_ ouroboros_stack_t* stack) {
     stack->mark = TOPMARK;
 }
 
+void ouroboros_stack_prepush_return(pTHX_ ouroboros_stack_t* stack) {
+    /* Reset SP to MARK position, effectively consuming all arguments.
+     * This prepares the stack for pushing return values.
+     * Equivalent to: SP -= items; or SP = MARK; in XS subs */
+    stack->sp = PL_stack_base + stack->mark;
+}
+
 int ouroboros_stack_items(pTHX_ ouroboros_stack_t* stack) {
     return stack->items;
 }

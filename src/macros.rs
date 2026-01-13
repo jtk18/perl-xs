@@ -68,6 +68,9 @@ macro_rules! xs {
                             };
                             _arg += 1;
                         )*
+                        // Reset stack pointer after fetching all arguments.
+                        // This prepares the stack for pushing return values.
+                        $ctx.st_prepush_return();
                         $body
                     });
                 }

@@ -12,6 +12,7 @@ our %SPEC = (
     fn => [
         # Stack management
         { name => "ouroboros_stack_init", type => "void", params => ["ouroboros_stack_t*"], tags => {} },
+        { name => "ouroboros_stack_prepush_return", type => "void", params => ["ouroboros_stack_t*"], tags => {} },
         { name => "ouroboros_stack_items", type => "int", params => ["ouroboros_stack_t*"], tags => {} },
         { name => "ouroboros_stack_putback", type => "void", params => ["ouroboros_stack_t*"], tags => {} },
         { name => "ouroboros_stack_fetch", type => "SV*", params => ["ouroboros_stack_t*", "SSize_t"], tags => {} },

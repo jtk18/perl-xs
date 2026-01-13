@@ -75,6 +75,16 @@ impl Context {
         unsafe { self.perl.ouroboros_stack_items(&mut self.stack) as isize }
     }
 
+    /// Reset stack pointer to prepare for pushing return values.
+    ///
+    /// This should be called after all arguments have been fetched but before
+    /// pushing return values. It resets the stack pointer to the mark position,
+    /// effectively consuming all arguments.
+    #[inline]
+    pub fn st_prepush_return(&mut self) {
+        unsafe { self.perl.ouroboros_stack_prepush_return(&mut self.stack) };
+    }
+
     unsafe fn st_fetch_raw(&mut self, idx: isize) -> Option<*mut raw::SV> {
         unsafe {
             if idx >= self.st_items() {
