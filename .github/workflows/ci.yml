@@ -252,6 +252,22 @@ jobs:
               die "DIAGNOSTIC: test_push missing! PERL_XS_SIZES=[$sizes] FIRST_STACK_FN=[$first_fn]";
             }
 
+            # Test 4: Check XSTest::Array and other submodule functions
+            print "\n=== Checking submodule functions ===\n";
+            my @missing;
+            for my $fn (qw(XSTest::Array::test_store XSTest::Array::test_clear XSTest::Hash::test_store XSTest::Panic::test_panic XSTest::Data::new)) {
+              if (defined &{$fn}) {
+                print "  $fn: EXISTS\n";
+              } else {
+                print "  $fn: MISSING\n";
+                push @missing, $fn;
+              }
+            }
+            if (@missing) {
+              my $sizes = defined &XSTest::get_perl_xs_sizes ? XSTest::get_perl_xs_sizes() : "unavailable";
+              die "FATAL: Missing functions: @missing\nPERL_XS_SIZES: $sizes";
+            }
+
             # List all functions in XSTest namespace
             print "\n=== All functions in XSTest namespace ===\n";
             no strict "refs";
